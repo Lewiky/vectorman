@@ -1,3 +1,3 @@
 package object assembler {
-  type Register = Byte
+  type Register = Int
 }
