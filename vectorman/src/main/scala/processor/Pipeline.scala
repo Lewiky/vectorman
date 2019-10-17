@@ -12,11 +12,11 @@ class Pipeline(instructionMemory: InstructionMemory) {
     val line: String = this.fetcher.fetchNext()
     val instruction = this.decoder.decodeNext(line)
     println(instruction)
-    this.state.increment(4)
+    this.state.increment()
   }
 
   def run(): Unit = {
-    while(state.getPc <= instructionMemory.memory.length) {
+    while(state.getPc < instructionMemory.memory.length) {
       this.tick()
     }
   }
