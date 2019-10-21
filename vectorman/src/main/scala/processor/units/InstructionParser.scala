@@ -6,7 +6,7 @@ import scala.util.parsing.combinator.RegexParsers
 
 class InstructionParser extends RegexParsers {
   def number: Parser[Int] =
-    """[0-9]{1,2}""".r ^^ {
+    """[-]?[0-9]{1,2}""".r ^^ {
       _.toInt
     }
 
@@ -70,10 +70,14 @@ class InstructionParser extends RegexParsers {
     case a ~ b => Cpy(List(a, b))
   }
 
+  def loi: Parser[Loi] = "LOI" ~> reg ~ number ^^ {
+    case a ~ im => Loi(List(a), im)
+  }
+
   def instruction: Parser[Instruction] = add | sub | mul | div |
                                          lod | str | bra | jmp |
                                          ble | cmp | and | not |
-                                         rsh | beq | cpy
+                                         rsh | beq | cpy | loi
 
   def program: Parser[List[Instruction]] = instruction.*
 }

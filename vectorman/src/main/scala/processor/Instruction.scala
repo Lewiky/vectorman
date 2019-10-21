@@ -34,4 +34,6 @@ case class Beq(params: List[Register]) extends Instruction
 
 case class Cpy(params: List[Register]) extends Instruction
 
+case class Loi(params: List[Register], immediate: Int) extends Instruction
+
 
