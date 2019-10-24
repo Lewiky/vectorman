@@ -2,9 +2,13 @@ package processor.units
 
 import processor._
 
+import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
 
 class InstructionParser extends RegexParsers {
+
+  override protected val whiteSpace: Regex = """(\s|#.*)+""".r
+
   def number: Parser[Int] =
     """[-]?[0-9]{1,2}""".r ^^ {
       _.toInt
@@ -79,5 +83,5 @@ class InstructionParser extends RegexParsers {
                                          ble | cmp | and | not |
                                          rsh | beq | cpy | loi
 
-  def program: Parser[List[Instruction]] = instruction.*
+  def program: Parser[List[Option[Instruction]]] = instruction.?.*
 }

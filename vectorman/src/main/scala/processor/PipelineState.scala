@@ -16,7 +16,7 @@ class PipelineState {
     this.programCounter = value
   }
 
-  def printRegisters(): Unit = println("[ " + (for ((k, v) <- registerFile) yield s"$k: $v, ").mkString("") + "]")
+  def printRegisters(): Unit = println("[ " + (for ((k, v) <- registerFile) yield s"r$k: $v, ").mkString("") + "]")
 
   def getReg(id: Int): Int = this.registerFile(id)
 
