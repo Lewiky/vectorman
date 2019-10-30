@@ -2,7 +2,8 @@ LOI r0 10
 LOI r1 0
 LOI r2 0
 LOI r3 1
-LOI r5 -3
+LOI r5 -4
 ADD r2 r2 r0
 SUB r0 r0 r3
 BLE r5 r1 r0
+END

@@ -18,7 +18,16 @@ class PipelineState {
   }
 
   //Yield a string of r{key}: {value} for each tuple in registerFile, concat all the strings and put between []
-  def printRegisters(): Unit = println("[ " + (for ((k, v) <- registerFile) yield s"r$k: $v, ").mkString("") + "]")
+  def printRegisters(): Unit = {
+    println("[ " +
+      (for (k <- registerFile.keys.toList.sorted) yield s" ${registerFile(k)} ").mkString("") +
+      s"| ${this.getPc}" +
+    "]")
+    println("[ " +
+      (for (k <- registerFile.keys.toList.sorted) yield s" $k ").mkString("") +
+      s"| PC" +
+      "]")
+  }
 
   def getReg(id: Int): Int = this.registerFile(id)
 
@@ -41,5 +50,6 @@ class PipelineState {
 
   def tickTime(amount: Int): Unit = {
     this.timer += amount
+    logger.debug("Tick")
   }
 }

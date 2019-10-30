@@ -36,4 +36,4 @@ case class Cpy(params: List[Register]) extends Instruction
 
 case class Loi(params: List[Register], immediate: Int) extends Instruction
 
-
+case class End(params: List[Register]) extends Instruction

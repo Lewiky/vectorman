@@ -78,10 +78,13 @@ class InstructionParser extends RegexParsers {
     case a ~ im => Loi(List(a), im)
   }
 
+  def end: Parser[End] = "END" ^^ { _ => End(List())}
+
   def instruction: Parser[Instruction] = add | sub | mul | div |
                                          lod | str | bra | jmp |
                                          ble | cmp | and | not |
-                                         rsh | beq | cpy | loi
+                                         rsh | beq | cpy | loi |
+                                         end
 
   def program: Parser[List[Option[Instruction]]] = instruction.?.*
 }
