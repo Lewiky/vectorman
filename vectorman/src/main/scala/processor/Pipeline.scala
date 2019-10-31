@@ -1,5 +1,7 @@
 package processor
 
+import ch.qos.logback.classic.{Level, Logger}
+import org.slf4j.LoggerFactory
 import processor.units.{Decoder, EUnit, Executor, Fetcher, WriteBack}
 
 class Pipeline(instructionMemory: InstructionMemory) {
@@ -10,6 +12,7 @@ class Pipeline(instructionMemory: InstructionMemory) {
   val executor: Executor = new Executor(this.state)
   val writeBack: WriteBack = new WriteBack(this.state, this)
   val units: List[EUnit[_, _]] = List(decoder, fetcher, executor, writeBack)
+  private var verbose: Boolean = false
 
   private def pipe[T](a: EUnit[_, T], b: EUnit[T, _]): Unit = {
     if (b.input.isEmpty) {
@@ -27,7 +30,7 @@ class Pipeline(instructionMemory: InstructionMemory) {
     logger.debug("Flushed pipeline")
   }
 
-  private def tick(): Unit = {
+  def tick(): Unit = {
     //I tried to map pipe over the units list but scala doesn't support dependant typing so it doesn't compile :(
     this.pipe(this.fetcher, this.decoder)
     this.pipe(this.decoder, this.executor)
@@ -35,7 +38,6 @@ class Pipeline(instructionMemory: InstructionMemory) {
     this.units.foreach {
       _.tick()
     }
-    //state.increment()
     state.tickTime(1)
   }
 
@@ -44,5 +46,17 @@ class Pipeline(instructionMemory: InstructionMemory) {
       this.tick()
     }
     println(s"Executed in ${state.getTime} cycles")
+  }
+
+  def toggleVerbose(): Unit = {
+    val root: Logger = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger]
+    if(this.verbose) {
+      root.setLevel(Level.INFO)
+      println("-- Verbose Off --")
+    } else{
+      root.setLevel(Level.DEBUG)
+      println("-- Verbose On  --")
+    }
+    this.verbose = !this.verbose
   }
 }
