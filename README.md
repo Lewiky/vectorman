@@ -2,6 +2,12 @@
 
 This is a simulator for a superscalar processor built in Scala. It includes an assembler that coverts a propietary instruction set to machine code to be executed.
 
+## Building and Running
+
+Run the `build.sh` script inside the `vectorman` directory to compile and start sbt shell
+
+Once inside the sbt shell, use `run programs/{ASM_FILE}.asm` to execute a program.
+
 ## Instruction Set
 
 | Binary | Instruction | arg0 | arg1 | arg2 | notes                    |

@@ -2,16 +2,17 @@ package processor.units
 
 import processor._
 
-class Fetcher(state: PipelineState, instructionMemory: InstructionMemory) extends EUnit[Nothing, String] {
+class Fetcher(state: PipelineState, instructionMemory: InstructionMemory) extends EUnit[Nothing, (String, ProgramCounter)] {
 
   var input: Option[Nothing] = _
-  var output: Option[String] = None
+  var output: Option[(String, ProgramCounter)] = None
 
-  private def fetchNext(): String = {
-    val inst = instructionMemory.memory(state.getPc)
+  private def fetchNext(): (String, ProgramCounter) = {
+    val pc = state.getPc
+    val inst = instructionMemory.memory(pc)
     logger.debug(s"Fetched: $inst")
     state.increment()
-    inst
+    (inst, pc)
   }
 
   def tick(): Unit = {
