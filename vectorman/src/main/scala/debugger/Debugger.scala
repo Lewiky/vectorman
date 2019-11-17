@@ -9,8 +9,11 @@ class Debugger(instructionMemory: InstructionMemory) {
   def debug(): Unit = {
     print(Assets.banner)
     println(Assets.subheading)
+    var last = 's'
     while(true){
-      val keypress = StdIn.readChar()
+      var keypress = 's'
+      val input = StdIn.readLine()
+      if(!input.isEmpty) keypress = input(0)
       if(keypress == 'r'){
         pipeline.run()
         println(" -- Finished --")
@@ -35,6 +38,7 @@ class Debugger(instructionMemory: InstructionMemory) {
       if(keypress == 'x'){
         return
       }
+      last = keypress
     }
   }
 }
