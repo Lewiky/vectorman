@@ -13,4 +13,13 @@ package object processor {
     }
   }
 
+  implicit class OptionImprovements[A](o: Option[A]) {
+    def someOr(a: A): A = {
+      o match {
+        case Some(x) => x
+        case None => a
+      }
+    }
+  }
+
 }

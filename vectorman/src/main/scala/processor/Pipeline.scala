@@ -41,11 +41,18 @@ class Pipeline(instructionMemory: InstructionMemory) {
     state.tickTime(1)
   }
 
+  def printStatistics(): Unit = {
+    val cycles = state.getTime
+    val instructions = state.getInstructionsCompleted
+    val rate = instructions.toFloat/cycles
+    println(s"Executed $instructions instructions in $cycles cycles (rate $rate inst/cycle)")
+  }
+
   def run(): Unit = {
     while (state.getPc >= 0) {
       this.tick()
     }
-    println(s"Executed in ${state.getTime} cycles")
+    this.printStatistics()
   }
 
   def toggleVerbose(): Unit = {

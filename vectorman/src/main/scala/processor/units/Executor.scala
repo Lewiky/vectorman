@@ -3,10 +3,10 @@ package processor.units
 import processor._
 import processor.ExecutionResult
 
-class Executor(state: PipelineState) extends EUnit[(Instruction, ProgramCounter), Option[ExecutionResult]] {
+class Executor(state: PipelineState) extends EUnit[(Instruction, ProgramCounter), ExecutionResult] {
 
   var input: Option[(Instruction, ProgramCounter)] = None
-  var output: Option[Option[ExecutionResult]] = None
+  var output: Option[ExecutionResult] = None
 
   private var executing: (Option[(Instruction,ProgramCounter)], Int) = Tuple2(None, 0)
 
@@ -34,37 +34,39 @@ class Executor(state: PipelineState) extends EUnit[(Instruction, ProgramCounter)
     }
   }
 
-  private def execute(instruction: Instruction, programCounter: ProgramCounter): Option[ExecutionResult] = {
+  private def execute(instruction: Instruction, programCounter: ProgramCounter): ExecutionResult = {
     logger.debug(s"Executed: $instruction")
+    var register: Option[Register] = None
+    var result: Option[Int] = None
     instruction match {
-      case Add(params) => Some(new ExecutionResult(params(0), g(params(1)) + g(params(2))))
-      case Sub(params) => Some(new ExecutionResult(params(0), g(params(1)) - g(params(2))))
-      case Mul(params) => Some(new ExecutionResult(params(0), g(params(1)) * g(params(2))))
-      case Div(params) => Some(new ExecutionResult(params(0), g(params(1)) / g(params(2))))
-      case Lod(params) => Some(new ExecutionResult(params(0), state.getMem(g(params(1)) + g(params(2)))))
+      case Add(params) => register = Some(params(0)); result = Some(g(params(1)) + g(params(2)))
+      case Sub(params) => register = Some(params(0)); result = Some(g(params(1)) - g(params(2)))
+      case Mul(params) => register = Some(params(0)); result = Some(g(params(1)) * g(params(2)))
+      case Div(params) => register = Some(params(0)); result =  Some(g(params(1)) / g(params(2)))
+      case Lod(params) => register = Some(params(0)); result = Some(state.getMem(g(params(1)) + g(params(2))))
       case Str(params) =>
         state.setMem(g(params(1)) + g(params(2)), g(params(0)))
-        None
-      case Bra(params) => Some(new ExecutionResult(PC, g(params(0))))
-      case Jmp(params) => Some(new ExecutionResult(PC, g(params(0)) + programCounter))
+      case Bra(params) => register = Some(PC); result = Some(g(params(0)))
+      case Jmp(params) => register = Some(PC); result =  Some(g(params(0)) + programCounter)
       case Ble(params) => if (g(params(1)) <= g(params(2))) {
-        Some(new ExecutionResult(PC, g(params(0)) + programCounter))
-      } else None
+        register = Some(PC); result = Some(g(params(0)) + programCounter)
+      }
       case Cmp(params) =>
-        var result = 0
-        if (g(params(1)) < g(params(2))) result = -1
-        if (g(params(1)) > g(params(2))) result = 1
-        Some(new ExecutionResult(params(0), result))
-      case And(params) => Some(new ExecutionResult(params(0), g(params(1)) & g(params(2))))
-      case Not(params) => Some(new ExecutionResult(params(0), ~g(params(1))))
-      case Rsh(params) => Some(new ExecutionResult(params(0), g(params(1)) >> g(params(2))))
+        var comp = 0
+        if (g(params(1)) < g(params(2))) comp = -1
+        if (g(params(1)) > g(params(2))) comp = 1
+        register = Some(params(0)); result = Some(comp)
+      case And(params) => register = Some(params(0)); result =  Some(g(params(1)) & g(params(2)))
+      case Not(params) => register = Some(params(0)); result = Some(~g(params(1)))
+      case Rsh(params) => register = Some(params(0)); result = Some(g(params(1)) >> g(params(2)))
       case Beq(params) => if (g(params(1)) == g(params(2))) {
-        Some(new ExecutionResult(PC, g(params(0)) + programCounter))
-      } else None
-      case Cpy(params) => Some(new ExecutionResult(params(0), g(params(1))))
-      case Loi(params, immediate) => Some(new ExecutionResult(params(0), immediate))
-      case End(_) => Some(new ExecutionResult(PC, -2))
+        register = Some(PC); result = Some(g(params(0)) + programCounter)
+      }
+      case Cpy(params) => register = Some(params(0)); result = Some(g(params(1)))
+      case Loi(params, immediate) => register = Some(params(0)); result = Some(immediate)
+      case End(_) => register = Some(PC);result = Some(-2)
     }
+    new ExecutionResult(register, result)
   }
 
   def tick(): Unit = {

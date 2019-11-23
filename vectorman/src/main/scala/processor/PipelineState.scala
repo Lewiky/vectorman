@@ -6,6 +6,7 @@ class PipelineState {
   private var registerFile: Map[Int, Int] = (for (_ <- 0 to 15) yield (0, 0)).toMap
   private var memoryFile: Map[Int, Int] = Map()
   private var timer: Int = 0
+  private var instructions: Int = 0
 
   def increment(amount: Int = 1): Unit = {
     this.programCounter += amount
@@ -52,4 +53,9 @@ class PipelineState {
     this.timer += amount
     logger.debug("Tick")
   }
+
+  def instructionFinished(): Unit = this.instructions += 1
+
+  def getInstructionsCompleted: Int = this.instructions
+
 }

@@ -2,21 +2,22 @@ package processor.units
 
 import processor._
 
-class WriteBack(state: PipelineState, pipeline: Pipeline) extends EUnit[Option[ExecutionResult], Nothing] {
+class WriteBack(state: PipelineState, pipeline: Pipeline) extends EUnit[ExecutionResult, Nothing] {
 
-  var input: Option[Option[ExecutionResult]] = None
+  var input: Option[ExecutionResult] = None
   var output: Option[Nothing] = _
 
-  private def writeResults(result: Option[ExecutionResult]): Unit = {
+  private def writeResults(result: ExecutionResult): Unit = {
     val startPc = state.getPc
-    result match {
-      case Some(result: ExecutionResult) =>
-        if (result.getRegister == PC) state.setPc(result.getResult)
-        else state.setReg(result.getRegister, result.getResult)
-      case None => ()
+    if (result.getRegister == PC) state.setPc(result.getResult)
+    else {
+      if(result.hasResult){
+        state.setReg(result.getRegister, result.getResult)
+      }
     }
-    if(startPc != state.getPc) this.pipeline.flush()
+    if (startPc != state.getPc) this.pipeline.flush()
     state.printRegisters()
+    state.instructionFinished()
   }
 
   def tick(): Unit = {
