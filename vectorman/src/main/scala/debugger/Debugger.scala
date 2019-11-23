@@ -38,6 +38,9 @@ class Debugger(instructionMemory: InstructionMemory) {
       if(keypress == 'x'){
         return
       }
+      if(keypress == 'i'){
+        pipeline.printStatistics()
+      }
       last = keypress
     }
   }
