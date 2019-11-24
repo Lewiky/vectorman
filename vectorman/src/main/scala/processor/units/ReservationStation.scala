@@ -11,7 +11,9 @@ class ReservationStation(executors: List[Executor]) extends EUnit[List[(Instruct
 
   private def resolveDependencies(): List[(Instruction, ProgramCounter)] = {
     val readyUnits = executors.count(_.isReady)
-    shelf(0) = (shelf(0)._1, shelf(0)._2, true) //TODO: Actually
+    if(shelf.nonEmpty){
+      shelf(0) = (shelf(0)._1, shelf(0)._2, true) //TODO: Actually
+    }
     val results = shelf.filter(_._3 == true).slice(0, readyUnits).map(x => (x._1, x._2)).toList
     shelf = shelf.drop(readyUnits)
     results
