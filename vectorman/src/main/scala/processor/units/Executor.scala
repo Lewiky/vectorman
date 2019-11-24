@@ -87,6 +87,8 @@ class Executor(state: PipelineState) extends EUnit[(Instruction, ProgramCounter)
     }
   }
 
+  def isReady: Boolean = this.executing._1.isEmpty && this.input.isEmpty
+
   def flush(): Unit = {
     this.executing = (None, 1)
   }

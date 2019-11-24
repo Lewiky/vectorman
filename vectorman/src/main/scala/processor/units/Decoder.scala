@@ -4,10 +4,10 @@ import processor.exceptions.InstructionParseException
 import processor.{Instruction, ProgramCounter, logger}
 import processor.units.{InstructionParser => Parser}
 
-class Decoder extends EUnit[(String, ProgramCounter), (Instruction, ProgramCounter)] {
+class Decoder extends EUnit[List[(String, ProgramCounter)], List[(Instruction, ProgramCounter)]] {
 
-  var input: Option[(String, ProgramCounter)] = None
-  var output: Option[(Instruction, ProgramCounter)] = None
+  var input: Option[List[(String, ProgramCounter)]] = None
+  var output: Option[List[(Instruction, ProgramCounter)]] = None
 
   private def decodeNext(line: String): Instruction = {
     Parser.parseAll(Parser.instruction, line) match {
@@ -18,11 +18,15 @@ class Decoder extends EUnit[(String, ProgramCounter), (Instruction, ProgramCount
     }
   }
 
+  private def decodeMany(lines: List[(String, ProgramCounter)]): List[(Instruction, ProgramCounter)] = {
+    lines.map(x => (this.decodeNext(x._1), x._2))
+  }
+
   def tick(): Unit = {
     if (output.isDefined) return
     input match {
-      case Some((inst, pc)) =>
-        output = Some((this.decodeNext(inst), pc))
+      case Some(xs) =>
+        output = Some(this.decodeMany(xs))
         input = None
       case None => ()
     }

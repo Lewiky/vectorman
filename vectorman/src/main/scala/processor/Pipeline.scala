@@ -2,16 +2,17 @@ package processor
 
 import ch.qos.logback.classic.{Level, Logger}
 import org.slf4j.LoggerFactory
-import processor.units.{Decoder, EUnit, Executor, Fetcher, WriteBack}
+import processor.units.{Decoder, EUnit, Executor, Fetcher, ReservationStation, WriteBack}
 
-class Pipeline(instructionMemory: InstructionMemory) {
+class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, executeUnits: Int) {
 
   val state: PipelineState = new PipelineState
   val decoder: Decoder = new Decoder()
-  val fetcher: Fetcher = new Fetcher(this.state, instructionMemory)
-  val executor: Executor = new Executor(this.state)
+  val fetcher: Fetcher = new Fetcher(this.state, instructionMemory, instructionsPerCycle)
+  val executors: List[Executor] = List.fill(executeUnits)(new Executor(this.state))
+  val reservationStation: ReservationStation = new ReservationStation(executors)
   val writeBack: WriteBack = new WriteBack(this.state, this)
-  val units: List[EUnit[_, _]] = List(decoder, fetcher, executor, writeBack)
+  val units: List[EUnit[_, _]] = List(fetcher, decoder, reservationStation, writeBack) ++ executors
   private var verbose: Boolean = false
 
   private def pipe[T](a: EUnit[_, T], b: EUnit[T, _]): Unit = {
@@ -26,15 +27,18 @@ class Pipeline(instructionMemory: InstructionMemory) {
       unit.input = None
       unit.output = None
     } )
-    this.executor.flush()
+    this.executors.foreach(_.flush())
+    this.reservationStation.flush()
     logger.debug("Flushed pipeline")
   }
 
   def tick(): Unit = {
     //I tried to map pipe over the units list but scala doesn't support dependant typing so it doesn't compile :(
     this.pipe(this.fetcher, this.decoder)
-    this.pipe(this.decoder, this.executor)
-    this.pipe(this.executor, this.writeBack)
+    this.pipe(this.decoder, this.reservationStation)
+    this.reservationStation.pipe()
+    //TODO: Reorder Buffer here
+    this.pipe(this.executors(0), this.writeBack)
     this.units.foreach {
       _.tick()
     }
