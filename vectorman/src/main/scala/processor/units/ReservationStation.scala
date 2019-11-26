@@ -9,14 +9,10 @@ class ReservationStation(executors: List[Executor]) extends EUnit[List[(Instruct
   override var output: Option[List[(Instruction, ProgramCounter)]] = None
   private var shelf: ListBuffer[(Instruction, ProgramCounter, Boolean)] = new ListBuffer[(Instruction, ProgramCounter, Boolean)]
 
-  private def resolveDependencies(): List[(Instruction, ProgramCounter)] = {
-    val readyUnits = executors.count(_.isReady)
-    if(shelf.nonEmpty){
+  private def resolveDependencies(): Unit = {
+    if (shelf.nonEmpty) {
       shelf(0) = (shelf(0)._1, shelf(0)._2, true) //TODO: Actually
     }
-    val results = shelf.filter(_._3 == true).slice(0, readyUnits).map(x => (x._1, x._2)).toList
-    shelf = shelf.drop(readyUnits)
-    results
   }
 
   def pipe(): Unit = {
@@ -40,6 +36,29 @@ class ReservationStation(executors: List[Executor]) extends EUnit[List[(Instruct
     }
   }
 
+  def getNReadyInstructions(n: Int): List[(Instruction, ProgramCounter)] = {
+    val buff = new ListBuffer[(Instruction, ProgramCounter)]
+    for (_ <- 0 until n ) {
+      this.getNextReadyInstruction match {
+        case Some(x) => buff += x
+        case None => ()
+      }
+    }
+    buff.toList
+  }
+
+  def getNextReadyInstruction: Option[(Instruction, ProgramCounter)] = {
+    this.resolveDependencies()
+    for(item <- this.shelf){
+      if(item._3){
+        this.shelf -= item
+        logger.debug(s"Dispatched $item")
+        return Some((item._1, item._2))
+      }
+    }
+    None
+  }
+
   def flush(): Unit = {
     this.shelf = new ListBuffer[(Instruction, ProgramCounter, Boolean)]
   }
@@ -51,7 +70,5 @@ class ReservationStation(executors: List[Executor]) extends EUnit[List[(Instruct
       case None => ()
     }
     input = None
-    val readyInstructions = this.resolveDependencies()
-    output = if (readyInstructions.isEmpty) None else Some(readyInstructions)
   }
 }

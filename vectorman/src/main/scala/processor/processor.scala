@@ -1,5 +1,7 @@
 import com.typesafe.scalalogging.Logger
 
+import scala.collection.mutable.ListBuffer
+
 package object processor {
   type Register = Int
   type ProgramCounter = Register
@@ -19,6 +21,15 @@ package object processor {
         case Some(x) => x
         case None => a
       }
+    }
+  }
+
+  implicit class ListBufferImprovements[A](l: ListBuffer[A]) {
+    def popOrNone(): Option[A] ={
+      if(l.nonEmpty){
+        Some(l.remove(0))
+      }
+      else None
     }
   }
 

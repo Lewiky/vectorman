@@ -4,10 +4,11 @@ import processor.exceptions.InstructionParseException
 import processor.{Instruction, ProgramCounter, logger}
 import processor.units.{InstructionParser => Parser}
 
-class Decoder extends EUnit[List[(String, ProgramCounter)], List[(Instruction, ProgramCounter)]] {
+class Decoder(executors: List[Executor]) extends EUnit[List[(String, ProgramCounter)], List[(Instruction, ProgramCounter)]] {
 
   var input: Option[List[(String, ProgramCounter)]] = None
   var output: Option[List[(Instruction, ProgramCounter)]] = None
+  val reservationStation: ReservationStation = new ReservationStation(executors)
 
   private def decodeNext(line: String): Instruction = {
     Parser.parseAll(Parser.instruction, line) match {
@@ -26,9 +27,17 @@ class Decoder extends EUnit[List[(String, ProgramCounter)], List[(Instruction, P
     if (output.isDefined) return
     input match {
       case Some(xs) =>
-        output = Some(this.decodeMany(xs))
+        reservationStation.input = Some(this.decodeMany(xs))
+        reservationStation.tick()
         input = None
       case None => ()
     }
+    val instructions = reservationStation.getNReadyInstructions(executors.count(_.isReady))
+    if(instructions.nonEmpty){
+      output = Some(instructions)
+    } else {
+      output = None
+    }
   }
+
 }

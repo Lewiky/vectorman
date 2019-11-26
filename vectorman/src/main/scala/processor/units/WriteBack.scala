@@ -9,14 +9,19 @@ class WriteBack(state: PipelineState, pipeline: Pipeline) extends EUnit[Executio
 
   private def writeResults(result: ExecutionResult): Unit = {
     val startPc = state.getPc
-    if (result.getRegister == PC) state.setPc(result.getResult)
+    if (result.getTarget == PC) state.setPc(result.getResult)
     else {
       if(result.hasResult){
-        state.setReg(result.getRegister, result.getResult)
+        if(result.getIsMemory){
+          state.setMem(result.getTarget, result.getResult)
+        } else {
+          state.setReg(result.getTarget, result.getResult)
+        }
       }
     }
     if (startPc != state.getPc) this.pipeline.flush()
     state.printRegisters()
+    state.printMemory()
     state.instructionFinished()
   }
 

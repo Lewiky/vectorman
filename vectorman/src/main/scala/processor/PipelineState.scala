@@ -30,6 +30,10 @@ class PipelineState {
       "]")
   }
 
+  def printMemory(): Unit = {
+    println(this.memoryFile)
+  }
+
   def getReg(id: Int): Int = this.registerFile(id)
 
   def setReg(id: Int, value: Int): Unit = {
