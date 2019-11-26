@@ -1,13 +1,14 @@
 package processor.units
 
 import processor.exceptions.InstructionParseException
+import processor.units.circularBuffer.ReorderBufferEntry
 import processor.{Instruction, ProgramCounter, logger}
 import processor.units.{InstructionParser => Parser}
 
-class Decoder(executors: List[Executor]) extends EUnit[List[(String, ProgramCounter)], List[(Instruction, ProgramCounter)]] {
+class Decoder(executors: List[Executor], reorderBuffer: ReorderBuffer) extends EUnit[List[(String, ProgramCounter)], List[ReorderBufferEntry]] {
 
   var input: Option[List[(String, ProgramCounter)]] = None
-  var output: Option[List[(Instruction, ProgramCounter)]] = None
+  var output: Option[List[ReorderBufferEntry]] = None
   val reservationStation: ReservationStation = new ReservationStation(executors)
 
   private def decodeNext(line: String): Instruction = {
@@ -23,11 +24,15 @@ class Decoder(executors: List[Executor]) extends EUnit[List[(String, ProgramCoun
     lines.map(x => (this.decodeNext(x._1), x._2))
   }
 
+  private def buildReservationStationInput(lines: List[(String, ProgramCounter)]): List[ReorderBufferEntry] = {
+    decodeMany(lines).map(x => reorderBuffer.addItem(x._1, x._2))
+  }
+
   def tick(): Unit = {
     if (output.isDefined) return
     input match {
       case Some(xs) =>
-        reservationStation.input = Some(this.decodeMany(xs))
+        reservationStation.input = Some(this.buildReservationStationInput(xs))
         reservationStation.tick()
         input = None
       case None => ()

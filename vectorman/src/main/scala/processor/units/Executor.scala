@@ -2,13 +2,14 @@ package processor.units
 
 import processor._
 import processor.ExecutionResult
+import processor.units.circularBuffer.ReorderBufferEntry
 
-class Executor(state: PipelineState) extends EUnit[(Instruction, ProgramCounter), ExecutionResult] {
+class Executor(state: PipelineState) extends EUnit[ReorderBufferEntry, ExecutionResult] {
 
-  var input: Option[(Instruction, ProgramCounter)] = None
+  var input: Option[ReorderBufferEntry] = None
   var output: Option[ExecutionResult] = None
 
-  private var executing: (Option[(Instruction, ProgramCounter)], Int) = Tuple2(None, 0)
+  private var executing: (Option[ReorderBufferEntry], Int) = Tuple2(None, 0)
 
   private def g(i: Int): Int = state.getReg(i)
 
@@ -34,7 +35,9 @@ class Executor(state: PipelineState) extends EUnit[(Instruction, ProgramCounter)
     }
   }
 
-  private def execute(instruction: Instruction, programCounter: ProgramCounter): ExecutionResult = {
+  private def execute(entry:  ReorderBufferEntry): Unit = {
+    val instruction:Instruction = entry.getInstruction
+    val programCounter: ProgramCounter = entry.getPC
     logger.debug(s"Executed: $instruction")
     var register: Option[Register] = None
     var result: Option[Int] = None
@@ -45,7 +48,8 @@ class Executor(state: PipelineState) extends EUnit[(Instruction, ProgramCounter)
       case Div(params) => register = Some(params(0)); result = Some(g(params(1)) / g(params(2)))
       case Lod(params) => register = Some(params(0)); result = Some(state.getMem(g(params(1)) + g(params(2))))
       case Str(params) =>
-        return new ExecutionResult(Some(g(params(1)) + g(params(2))), Some(g(params(0))), isMemory = true)
+        entry.finish(new ExecutionResult(Some(g(params(1)) + g(params(2))), Some(g(params(0))), programCounter, isMemory = true))
+        return
       case Bra(params) => register = Some(PC); result = Some(g(params(0)))
       case Jmp(params) => register = Some(PC); result = Some(g(params(0)) + programCounter)
       case Ble(params) => if (g(params(1)) <= g(params(2))) {
@@ -69,20 +73,21 @@ class Executor(state: PipelineState) extends EUnit[(Instruction, ProgramCounter)
       case Loi(params, immediate) => register = Some(params(0)); result = Some(immediate)
       case End(_) => register = Some(PC); result = Some(-2)
     }
-    new ExecutionResult(register, result)
+    entry.finish(new ExecutionResult(register, result, programCounter))
   }
 
   def tick(): Unit = {
     if (input.isEmpty || output.isDefined) return
     this.executing._1 match {
-      case Some((instruction, pc)) =>
-        if (this.instructionLength(instruction) > this.executing._2) {
+      case Some(entry) =>
+        if (this.instructionLength(entry.getInstruction) > this.executing._2) {
+          entry.execute()
           this.executing = this.executing.copy(_2 = this.executing._2 + 1)
           logger.debug(s"Executing: ${this.executing}")
           this.output = None
         }
         else {
-          output = Some(this.execute(instruction, pc))
+          this.execute(entry)
           executing = (None, 1)
           input = None
         }

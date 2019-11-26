@@ -2,15 +2,16 @@ package processor
 
 import ch.qos.logback.classic.{Level, Logger}
 import org.slf4j.LoggerFactory
-import processor.units.{Decoder, EUnit, Executor, Fetcher, WriteBack}
+import processor.units.{Decoder, EUnit, Executor, Fetcher, ReorderBuffer, WriteBack}
 
 class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, executeUnits: Int) {
 
+  val reorderBuffer = new ReorderBuffer
   val state: PipelineState = new PipelineState
   val fetcher: Fetcher = new Fetcher(this.state, instructionMemory, instructionsPerCycle)
   val executors: List[Executor] = List.fill(executeUnits)(new Executor(this.state))
-  val decoder: Decoder = new Decoder(executors)
-  val writeBack: WriteBack = new WriteBack(this.state, this)
+  val decoder: Decoder = new Decoder(this.executors, this.reorderBuffer)
+  val writeBack: WriteBack = new WriteBack(this.state, this, this.reorderBuffer)
   val units: List[EUnit[_, _]] = List(fetcher, decoder, writeBack) ++ executors
   private var verbose: Boolean = false
 
@@ -38,6 +39,7 @@ class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, 
     } )
     this.executors.foreach(_.flush())
     this.decoder.reservationStation.flush()
+    this.reorderBuffer.flush()
     logger.debug("Flushed pipeline")
   }
 
@@ -45,8 +47,6 @@ class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, 
     //I tried to map pipe over the units list but scala doesn't support dependant typing so it doesn't compile :(
     this.pipe(this.fetcher, this.decoder)
     this.pipeMany(this.decoder, this.executors)
-    //TODO: Reorder Buffer here
-    this.pipe(this.executors(0), this.writeBack)
     this.units.foreach {
       _.tick()
     }

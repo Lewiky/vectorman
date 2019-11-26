@@ -2,12 +2,12 @@ package processor.units
 
 import processor._
 
-class WriteBack(state: PipelineState, pipeline: Pipeline) extends EUnit[ExecutionResult, Nothing] {
+class WriteBack(state: PipelineState, pipeline: Pipeline, reorderBuffer: ReorderBuffer) extends EUnit[List[ExecutionResult], Nothing] {
 
-  var input: Option[ExecutionResult] = None
+  var input: Option[List[ExecutionResult]] = None
   var output: Option[Nothing] = _
 
-  private def writeResults(result: ExecutionResult): Unit = {
+  private def writeResult(result: ExecutionResult): Unit = {
     val startPc = state.getPc
     if (result.getTarget == PC) state.setPc(result.getResult)
     else {
@@ -26,9 +26,11 @@ class WriteBack(state: PipelineState, pipeline: Pipeline) extends EUnit[Executio
   }
 
   def tick(): Unit = {
-    if (this.input.isDefined) {
-      this.writeResults(this.input.get)
-      this.input = None
+    if(this.reorderBuffer.nonEmpty){
+      this.reorderBuffer.getNextResult match {
+        case Some(result) => this.writeResult(result)
+        case None => ()
+      }
     }
   }
 }
