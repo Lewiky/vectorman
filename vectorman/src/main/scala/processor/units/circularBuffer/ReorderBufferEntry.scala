@@ -29,4 +29,6 @@ class ReorderBufferEntry(instruction: Instruction, programCounter: ProgramCounte
 
   def getResult: Option[ExecutionResult] = this.result
 
+
+  override def toString: String = s"PC: $programCounter, Instruction: $instruction, status: $state"
 }

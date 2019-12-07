@@ -9,10 +9,10 @@ class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, 
   val reorderBuffer = new ReorderBuffer
   val state: PipelineState = new PipelineState
   val fetcher: Fetcher = new Fetcher(this.state, instructionMemory, instructionsPerCycle)
-  val executors: List[Executor] = List.fill(executeUnits)(new Executor(this.state))
-  val decoder: Decoder = new Decoder(this.executors, this.reorderBuffer)
+  var executors: List[Executor] = List.fill(executeUnits)(new Executor(this.state))
+  var decoder: Decoder = new Decoder(this.executors, this.reorderBuffer, this.state)
   val writeBack: WriteBack = new WriteBack(this.state, this, this.reorderBuffer)
-  val units: List[EUnit[_, _]] = List(fetcher, decoder, writeBack) ++ executors
+  var units: List[EUnit[_, _]] = List(fetcher, decoder, writeBack) ++ executors
   private var verbose: Boolean = false
 
   private def pipe[T](a: EUnit[_, T], b: EUnit[T, _]): Unit = {
@@ -40,13 +40,14 @@ class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, 
     this.executors.foreach(_.flush())
     this.decoder.reservationStation.flush()
     this.reorderBuffer.flush()
+    this.state.flushScoreboard()
     logger.debug("Flushed pipeline")
   }
 
   def tick(): Unit = {
     //I tried to map pipe over the units list but scala doesn't support dependant typing so it doesn't compile :(
     this.pipe(this.fetcher, this.decoder)
-    this.pipeMany(this.decoder, this.executors)
+    this.pipeMany(this.decoder, this.executors.filter(unit => unit.isReady))
     this.units.foreach {
       _.tick()
     }
@@ -57,7 +58,7 @@ class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, 
     val cycles = state.getTime
     val instructions = state.getInstructionsCompleted
     val rate = instructions.toFloat/cycles
-    println(s"Executed $instructions instructions in $cycles cycles (rate $rate inst/cycle)")
+    println(f"Executed $instructions instructions in $cycles cycles (rate $rate%1.2f inst/cycle)")
   }
 
   def run(): Unit = {
@@ -65,6 +66,12 @@ class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, 
       this.tick()
     }
     this.printStatistics()
+  }
+
+  def setExecutors(n: Int) : Unit = {
+    this.executors = List.fill(executeUnits)(new Executor(this.state))
+    this.decoder = new Decoder(this.executors, this.reorderBuffer, this.state)
+    this.units = List(fetcher, decoder, writeBack) ++ executors
   }
 
   def toggleVerbose(): Unit = {

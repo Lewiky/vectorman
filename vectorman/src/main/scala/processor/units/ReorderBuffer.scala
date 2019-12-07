@@ -1,6 +1,6 @@
 package processor.units
 
-import processor.{ExecutionResult, Instruction, ProgramCounter}
+import processor._
 import processor.units.circularBuffer.{CircularBuffer, ReorderBufferEntry}
 
 
@@ -9,9 +9,11 @@ class ReorderBuffer {
   private var buffer: CircularBuffer[ReorderBufferEntry] = new CircularBuffer[ReorderBufferEntry](100)
 
   def getNextResult: Option[ExecutionResult] = {
-    if(buffer.peek().isFinished){
+    if (buffer.peek().isFinished) {
       this.buffer.read() match {
-        case Some(entry) => return entry.getResult
+        case Some(entry) =>
+          logger.debug(s"Released from buffer: ${entry.getInstruction}")
+          return entry.getResult
         case None => ()
       }
     }

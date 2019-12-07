@@ -1,10 +1,14 @@
 package processor
 
+import javax.print.attribute.standard.Destination
+import processor.units.circularBuffer.ReorderBufferEntry
+
 
 class PipelineState {
   private var programCounter: ProgramCounter = 0
   private var registerFile: Map[Int, Int] = (for (_ <- 0 to 15) yield (0, 0)).toMap
   private var memoryFile: Map[Int, Int] = Map()
+  private var scoreboard: Map[Int, Option[ReorderBufferEntry]] = Map()
   private var timer: Int = 0
   private var instructions: Int = 0
 
@@ -23,15 +27,69 @@ class PipelineState {
     println("[ " +
       (for (k <- registerFile.keys.toList.sorted) yield s" ${registerFile(k)} ").mkString("") +
       s"| ${this.getPc}" +
-    "]")
+      "]")
     println("[ " +
       (for (k <- registerFile.keys.toList.sorted) yield s" $k ").mkString("") +
       s"| PC" +
       "]")
+
+    //println(s"Scoreboard: ${this.scoreboard}")
+  }
+
+  def printScoreboard(): Unit = {
+    println("Scoreboard:")
+
+    for (item <- this.scoreboard) {
+      println(item)
+    }
+  }
+
+  def reserveScoreboard(entry: ReorderBufferEntry): Unit = {
+    if (this.scoreboard.contains(entry.getInstruction.getDestination) && this.scoreboard(entry.getInstruction.getDestination).isDefined) {
+      return
+    }
+    this.scoreboard += (entry.getInstruction.getDestination -> Some(entry))
+  }
+
+  def freeScoreboard(result: ExecutionResult): Unit = {
+    this.scoreboard += (result.getTarget -> None)
+  }
+
+  def scoreboardReserved(entry: ReorderBufferEntry): Boolean = {
+    entry.getInstruction.getParams foreach {
+      param =>
+        if (this.scoreboard.contains(param)) {
+          this.scoreboard(param) match {
+            case(Some(value)) => if(value.getPC < entry.getPC) return true
+            case None => ()
+          }
+        }
+    }
+    if (this.scoreboard.contains((entry.getInstruction.getDestination))) {
+      this.scoreboard(entry.getInstruction.getDestination) match {
+        case Some(sb_entry) => return sb_entry != entry
+        case None => ()
+      }
+    }
+    false
+  }
+
+  def scoreboardTargetReserved(entry: ReorderBufferEntry): Boolean = {
+    if (this.scoreboard.contains(entry.getInstruction.getDestination)) {
+      this.scoreboard(entry.getInstruction.getDestination) match {
+        case Some(sb_entry) => return sb_entry != entry
+        case None => ()
+      }
+    }
+    false
+  }
+
+  def flushScoreboard(): Unit = {
+    this.scoreboard = Map()
   }
 
   def printMemory(): Unit = {
-    println(this.memoryFile)
+    println(s"Memory: ${this.memoryFile}")
   }
 
   def getReg(id: Int): Int = this.registerFile(id)
@@ -41,9 +99,10 @@ class PipelineState {
   }
 
   def getMem(address: Int): Int = {
-    if (!this.memoryFile.contains(address)) return 0
-    logger.debug(s"Returning $address: ${this.memoryFile(address)}")
-    this.memoryFile(address)
+    val new_address = address + 1000
+    if (!this.memoryFile.contains(new_address)) return 0
+    logger.debug(s"Returning $new_address: ${this.memoryFile(new_address)}")
+    this.memoryFile(new_address)
   }
 
   def setMem(address: Int, value: Int): Unit = {

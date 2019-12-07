@@ -16,7 +16,7 @@ class Fetcher(state: PipelineState, instructionMemory: InstructionMemory, instru
   }
 
   private def fetchMany(): List[(String, ProgramCounter)] = {
-    (for(_ <- 0.until(instructionsPerCycle) if state.getPc < instructionMemory.memory.length) yield fetchNext()).toList
+    (for (_ <- 0.until(instructionsPerCycle) if state.getPc < instructionMemory.memory.length) yield fetchNext()).toList
   }
 
   def tick(): Unit = {

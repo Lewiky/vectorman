@@ -1,0 +1,21 @@
+LOI r0 1
+LOI r1 1
+LOI r2 1
+LOI r3 1
+LOI r4 1
+LOI r5 1
+LOI r6 1
+LOI r7 10
+LOI r8 1
+LOI r9 0
+LOI r10 -8
+ADD r0 r0 r0
+ADD r1 r1 r1
+ADD r2 r2 r2
+ADD r3 r3 r3
+ADD r4 r4 r4
+ADD r5 r5 r5
+ADD r6 r6 r6
+SUB r7 r7 r8
+BLE r10 r9 r7
+END

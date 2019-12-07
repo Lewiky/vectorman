@@ -2,14 +2,14 @@ package processor.units
 
 import processor.exceptions.InstructionParseException
 import processor.units.circularBuffer.ReorderBufferEntry
-import processor.{Instruction, ProgramCounter, logger}
+import processor.{Instruction, PipelineState, ProgramCounter, logger}
 import processor.units.{InstructionParser => Parser}
 
-class Decoder(executors: List[Executor], reorderBuffer: ReorderBuffer) extends EUnit[List[(String, ProgramCounter)], List[ReorderBufferEntry]] {
+class Decoder(executors: List[Executor], reorderBuffer: ReorderBuffer, state: PipelineState) extends EUnit[List[(String, ProgramCounter)], List[ReorderBufferEntry]] {
 
   var input: Option[List[(String, ProgramCounter)]] = None
   var output: Option[List[ReorderBufferEntry]] = None
-  val reservationStation: ReservationStation = new ReservationStation(executors)
+  val reservationStation: ReservationStation = new ReservationStation(executors, state)
 
   private def decodeNext(line: String): Instruction = {
     Parser.parseAll(Parser.instruction, line) match {
@@ -25,7 +25,11 @@ class Decoder(executors: List[Executor], reorderBuffer: ReorderBuffer) extends E
   }
 
   private def buildReservationStationInput(lines: List[(String, ProgramCounter)]): List[ReorderBufferEntry] = {
-    decodeMany(lines).map(x => reorderBuffer.addItem(x._1, x._2))
+    val xs = decodeMany(lines).map(x => reorderBuffer.addItem(x._1, x._2))
+    xs foreach {
+      entry => state.reserveScoreboard(entry)
+    }
+    xs
   }
 
   def tick(): Unit = {
@@ -33,12 +37,12 @@ class Decoder(executors: List[Executor], reorderBuffer: ReorderBuffer) extends E
     input match {
       case Some(xs) =>
         reservationStation.input = Some(this.buildReservationStationInput(xs))
-        reservationStation.tick()
         input = None
       case None => ()
     }
+    reservationStation.tick()
     val instructions = reservationStation.getNReadyInstructions(executors.count(_.isReady))
-    if(instructions.nonEmpty){
+    if (instructions.nonEmpty) {
       output = Some(instructions)
     } else {
       output = None

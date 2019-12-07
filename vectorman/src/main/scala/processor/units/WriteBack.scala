@@ -9,16 +9,21 @@ class WriteBack(state: PipelineState, pipeline: Pipeline, reorderBuffer: Reorder
 
   private def writeResult(result: ExecutionResult): Unit = {
     val startPc = state.getPc
-    if (result.getTarget == PC) state.setPc(result.getResult)
-    else {
+    if (result.getTarget == PC){
       if(result.hasResult){
-        if(result.getIsMemory){
+        state.setPc(result.getResult)
+      }
+    }
+    else {
+      if (result.hasResult) {
+        if (result.getIsMemory) {
           state.setMem(result.getTarget, result.getResult)
         } else {
           state.setReg(result.getTarget, result.getResult)
         }
       }
     }
+    state.freeScoreboard(result)
     if (startPc != state.getPc) this.pipeline.flush()
     state.printRegisters()
     state.printMemory()
@@ -26,7 +31,7 @@ class WriteBack(state: PipelineState, pipeline: Pipeline, reorderBuffer: Reorder
   }
 
   def tick(): Unit = {
-    if(this.reorderBuffer.nonEmpty){
+    if (this.reorderBuffer.nonEmpty) {
       this.reorderBuffer.getNextResult match {
         case Some(result) => this.writeResult(result)
         case None => ()

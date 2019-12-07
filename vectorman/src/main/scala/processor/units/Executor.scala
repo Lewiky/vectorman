@@ -35,8 +35,8 @@ class Executor(state: PipelineState) extends EUnit[ReorderBufferEntry, Execution
     }
   }
 
-  private def execute(entry:  ReorderBufferEntry): Unit = {
-    val instruction:Instruction = entry.getInstruction
+  private def execute(entry: ReorderBufferEntry): Unit = {
+    val instruction: Instruction = entry.getInstruction
     val programCounter: ProgramCounter = entry.getPC
     logger.debug(s"Executed: $instruction")
     var register: Option[Register] = None
@@ -52,10 +52,11 @@ class Executor(state: PipelineState) extends EUnit[ReorderBufferEntry, Execution
         return
       case Bra(params) => register = Some(PC); result = Some(g(params(0)))
       case Jmp(params) => register = Some(PC); result = Some(g(params(0)) + programCounter)
-      case Ble(params) => if (g(params(1)) <= g(params(2))) {
+      case Ble(params) =>
         register = Some(PC)
-        result = Some(g(params(0)) + programCounter)
-      }
+        if (g(params(1)) <= g(params(2))) {
+          result = Some(g(params(0)) + programCounter)
+        }
       case Cmp(params) =>
         var comp = 0
         if (g(params(1)) < g(params(2))) comp = -1
@@ -65,10 +66,11 @@ class Executor(state: PipelineState) extends EUnit[ReorderBufferEntry, Execution
       case And(params) => register = Some(params(0)); result = Some(g(params(1)) & g(params(2)))
       case Not(params) => register = Some(params(0)); result = Some(~g(params(1)))
       case Rsh(params) => register = Some(params(0)); result = Some(g(params(1)) >> g(params(2)))
-      case Beq(params) => if (g(params(1)) == g(params(2))) {
+      case Beq(params) =>
         register = Some(PC)
-        result = Some(g(params(0)) + programCounter)
-      }
+        if (g(params(1)) == g(params(2))) {
+          result = Some(g(params(0)) + programCounter)
+        }
       case Cpy(params) => register = Some(params(0)); result = Some(g(params(1)))
       case Loi(params, immediate) => register = Some(params(0)); result = Some(immediate)
       case End(_) => register = Some(PC); result = Some(-2)
@@ -96,6 +98,16 @@ class Executor(state: PipelineState) extends EUnit[ReorderBufferEntry, Execution
   }
 
   def isReady: Boolean = this.executing._1.isEmpty && this.input.isEmpty
+
+  def getExecuting: Option[ReorderBufferEntry] = {
+    this.executing._1 match {
+      case Some(x) => Some(x)
+      case None => this.input match {
+        case Some(x) => Some(x)
+        case None => None
+      }
+    }
+  }
 
   def flush(): Unit = {
     this.executing = (None, 1)

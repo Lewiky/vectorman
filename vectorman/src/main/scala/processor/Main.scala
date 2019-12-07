@@ -5,9 +5,7 @@ import debugger.Debugger
 TODO: Write more ASM programs
 TODO: Superscalar
   SUBTODO: Multiple Execute Units
-  SUBTODO: Fetch and decode
-  SUBTODO: Reorder buffer
-  SUBTODO:
+  SUBTODO: Dependency Resolution Algorithm
 TODO: Branch Prediction
   SUBTODO: Static Branch
   SUBTODO: Dynamic Branch
