@@ -11,41 +11,10 @@ class ReservationStation(executors: List[Executor], state: PipelineState) extend
   private var shelf: ListBuffer[(ReorderBufferEntry, Boolean)] = new ListBuffer[(ReorderBufferEntry, Boolean)]
   private var buff: ListBuffer[ReorderBufferEntry] = new ListBuffer[ReorderBufferEntry]
 
-  private def isNotDependent(reorderBufferEntry: ReorderBufferEntry): Boolean = {
-    if(state.scoreboardReserved(reorderBufferEntry)) return false
-    //check no other executing instruction writes to the same place (WAW Hazard)
-    executors foreach {
-      executor =>
-        executor.getExecuting match {
-          case Some(entry) =>
-            if (entry.getInstruction.getDestination == reorderBufferEntry.getInstruction.getDestination) return false
-            if (reorderBufferEntry.getInstruction.params.contains(entry.getInstruction.getDestination)) return false
-          case None => ()
-        }
-    }
-    // Check that your operands are the most up to date version (RAW Hazard)
-    reorderBufferEntry.getInstruction.getParams foreach {
-      param =>
-        //Check instructions ahead of you in the queue too
-        shelf.take(shelf.indexOf((reorderBufferEntry, false))) foreach {
-          case (entry, _) => if (entry.getInstruction.getDestination == param) {
-            return false
-          }
-        }
-        buff foreach {
-          entry =>
-            if (entry.getInstruction.getDestination == param) {
-              return false
-            }
-        }
-    }
-    true
-  }
-
   private def resolveDependencies(): Unit = {
     shelf = shelf map {
       case (entry: ReorderBufferEntry, _: Boolean) =>
-        (entry, this.isNotDependent(entry))
+        (entry, !state.scoreboardReserved(entry))
     }
   }
 
