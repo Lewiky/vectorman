@@ -60,12 +60,12 @@ class PipelineState {
       param =>
         if (this.scoreboard.contains(param)) {
           this.scoreboard(param) match {
-            case(Some(value)) => if(value.getPC < entry.getPC) return true
+            case Some(value) => if(value.getPC < entry.getPC) return true
             case None => ()
           }
         }
     }
-    if (this.scoreboard.contains((entry.getInstruction.getDestination))) {
+    if (this.scoreboard.contains(entry.getInstruction.getDestination)) {
       this.scoreboard(entry.getInstruction.getDestination) match {
         case Some(sb_entry) => return sb_entry != entry
         case None => ()
