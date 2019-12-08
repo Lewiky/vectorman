@@ -2,16 +2,17 @@ package processor
 
 import ch.qos.logback.classic.{Level, Logger}
 import org.slf4j.LoggerFactory
+import processor.units.branchPredictor.BranchPredictor
 import processor.units.{Decoder, EUnit, Executor, Fetcher, ReorderBuffer, WriteBack}
 
-class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, executeUnits: Int) {
+class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, executeUnits: Int,val branchPredictor: BranchPredictor) {
 
   val reorderBuffer = new ReorderBuffer
   val state: PipelineState = new PipelineState
-  val fetcher: Fetcher = new Fetcher(this.state, instructionMemory, instructionsPerCycle)
+  val fetcher: Fetcher = new Fetcher(this.state, instructionMemory, instructionsPerCycle, branchPredictor)
   var executors: List[Executor] = List.fill(executeUnits)(new Executor(this.state))
   var decoder: Decoder = new Decoder(this.executors, this.reorderBuffer, this.state)
-  val writeBack: WriteBack = new WriteBack(this.state, this, this.reorderBuffer)
+  val writeBack: WriteBack = new WriteBack(this.state, this, this.reorderBuffer, branchPredictor)
   var units: List[EUnit[_, _]] = List(fetcher, decoder, writeBack) ++ executors
   private var verbose: Boolean = false
 
@@ -59,6 +60,7 @@ class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, 
     val instructions = state.getInstructionsCompleted
     val rate = instructions.toFloat/cycles
     println(f"Executed $instructions instructions in $cycles cycles (rate $rate%1.2f inst/cycle)")
+    branchPredictor.printStatistics()
   }
 
   def run(): Unit = {

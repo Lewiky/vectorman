@@ -1,16 +1,16 @@
 package processor.units
 
 import processor._
+import processor.units.branchPredictor.BranchPredictor
 
-class WriteBack(state: PipelineState, pipeline: Pipeline, reorderBuffer: ReorderBuffer) extends EUnit[List[ExecutionResult], Nothing] {
+class WriteBack(state: PipelineState, pipeline: Pipeline, reorderBuffer: ReorderBuffer, branchPredictor: BranchPredictor) extends EUnit[List[ExecutionResult], Nothing] {
 
   var input: Option[List[ExecutionResult]] = None
   var output: Option[Nothing] = _
 
   private def writeResult(result: ExecutionResult): Unit = {
-    val startPc = state.getPc
-    if (result.getTarget == PC){
-      if(result.hasResult){
+    if (result.getTarget == PC) {
+      if (result.hasResult) {
         state.setPc(result.getResult)
       }
     }
@@ -24,7 +24,10 @@ class WriteBack(state: PipelineState, pipeline: Pipeline, reorderBuffer: Reorder
       }
     }
     state.freeScoreboard(result)
-    if (startPc != state.getPc) this.pipeline.flush()
+    if (result.getTarget == PC && !branchPredictor.wasCorrect(result)){
+      branchPredictor.ingest("", state.getPc - 1)
+      this.pipeline.flush()
+    }
     state.printRegisters()
     state.printMemory()
     state.instructionFinished()

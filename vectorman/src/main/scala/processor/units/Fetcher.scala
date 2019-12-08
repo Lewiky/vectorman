@@ -1,17 +1,19 @@
 package processor.units
 
 import processor._
+import processor.units.branchPredictor.BranchPredictor
 
-class Fetcher(state: PipelineState, instructionMemory: InstructionMemory, instructionsPerCycle: Int) extends EUnit[Nothing, List[(String, ProgramCounter)]] {
+class Fetcher(state: PipelineState, instructionMemory: InstructionMemory, instructionsPerCycle: Int, branchPredictor: BranchPredictor) extends EUnit[Nothing, List[(String, ProgramCounter)]] {
 
   var input: Option[Nothing] = _
   var output: Option[List[(String, ProgramCounter)]] = None
 
   private def fetchNext(): (String, ProgramCounter) = {
-    val pc = state.getPc
+    val pc = branchPredictor.predict()
     val inst = instructionMemory.memory(pc)
     logger.debug(s"Fetched: $inst")
     state.increment()
+    branchPredictor.ingest(inst, pc)
     (inst, pc)
   }
 

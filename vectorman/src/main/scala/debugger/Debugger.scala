@@ -1,11 +1,20 @@
 package debugger
 
+import processor.units.branchPredictor.{AlwaysNotTakenPredictor, BranchPredictor}
 import processor.{InstructionMemory, Pipeline}
 
 import scala.io.StdIn
 
-class Debugger(instructionMemory: InstructionMemory, var instructionsPerCycle: Int = 5, var executeUnits: Int = 2) {
-  var pipeline = new Pipeline(instructionMemory, instructionsPerCycle, executeUnits)
+class Debugger(instructionMemory: InstructionMemory,
+               var instructionsPerCycle: Int = 5,
+               var executeUnits: Int = 2,
+               var branchPredictor: BranchPredictor = new AlwaysNotTakenPredictor) {
+  var pipeline = new Pipeline(instructionMemory, instructionsPerCycle, executeUnits, branchPredictor)
+
+  private def buildPipeline(executeUnits: Int = this.executeUnits): Pipeline = {
+    this.executeUnits = executeUnits
+    new Pipeline(instructionMemory, instructionsPerCycle, executeUnits, branchPredictor)
+  }
 
   def debug(): Unit = {
     print(Assets.banner)
@@ -19,13 +28,13 @@ class Debugger(instructionMemory: InstructionMemory, var instructionsPerCycle: I
       if (keypress == 'r') {
         pipeline.run()
         println(" -- Finished --")
-        pipeline = new Pipeline(instructionMemory, instructionsPerCycle, executeUnits)
+        pipeline = buildPipeline()
       }
       if (keypress == 's') {
         if (pipeline.state.getPc >= 0) pipeline.tick()
         else {
           println("-- Finished --")
-          pipeline = new Pipeline(instructionMemory, instructionsPerCycle, executeUnits)
+          pipeline = buildPipeline()
         }
       }
       if (keypress == 'v') {
@@ -35,6 +44,7 @@ class Debugger(instructionMemory: InstructionMemory, var instructionsPerCycle: I
         pipeline.state.printRegisters()
         pipeline.decoder.reservationStation.print()
         pipeline.state.printScoreboard()
+        pipeline.branchPredictor.print()
       }
       if (keypress == 'h') {
         print(Assets.help)
@@ -46,8 +56,7 @@ class Debugger(instructionMemory: InstructionMemory, var instructionsPerCycle: I
         pipeline.printStatistics()
       }
       if (keypress == 'u') {
-        executeUnits = input(2).asDigit
-        pipeline = new Pipeline(instructionMemory, instructionsPerCycle, executeUnits)
+        pipeline = buildPipeline(executeUnits=input(2).asDigit)
         println(s"Executing with $executeUnits units")
       }
       last = keypress

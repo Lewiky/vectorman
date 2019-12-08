@@ -2,8 +2,7 @@ package processor
 
 sealed trait Instruction {
   val params: List[Register]
-  def
-  getDestination: Register = params(0)
+  def getDestination: Register = params(0)
   def getParams: List[Register] = params.slice(1, params.length)
 }
 
