@@ -1,6 +1,7 @@
 package debugger
 
-import processor.units.branchPredictor.{AlwaysNotTakenPredictor, BranchPredictor}
+import processor.units.branchPredictor._
+import processor.units.branchPredictor.branchPredictorType._
 import processor.{InstructionMemory, Pipeline}
 
 import scala.io.StdIn
@@ -8,10 +9,10 @@ import scala.io.StdIn
 class Debugger(instructionMemory: InstructionMemory,
                var instructionsPerCycle: Int = 5,
                var executeUnits: Int = 2,
-               var branchPredictor: BranchPredictor = new AlwaysNotTakenPredictor) {
+               var branchPredictor: Value = alwaysNotTaken) {
   var pipeline = new Pipeline(instructionMemory, instructionsPerCycle, executeUnits, branchPredictor)
 
-  private def buildPipeline(executeUnits: Int = this.executeUnits): Pipeline = {
+  private def buildPipeline(executeUnits: Int = this.executeUnits ): Pipeline = {
     this.executeUnits = executeUnits
     new Pipeline(instructionMemory, instructionsPerCycle, executeUnits, branchPredictor)
   }

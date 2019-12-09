@@ -2,11 +2,13 @@ package processor
 
 import ch.qos.logback.classic.{Level, Logger}
 import org.slf4j.LoggerFactory
-import processor.units.branchPredictor.BranchPredictor
+import processor.units.branchPredictor.{BranchPredictor, BranchPredictorFactory}
+import processor.units.branchPredictor.branchPredictorType._
 import processor.units.{Decoder, EUnit, Executor, Fetcher, ReorderBuffer, WriteBack}
 
-class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, executeUnits: Int,val branchPredictor: BranchPredictor) {
+class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, executeUnits: Int, branchPredictorType: Value) {
 
+  val branchPredictor: BranchPredictor = BranchPredictorFactory.create(branchPredictorType)
   val reorderBuffer = new ReorderBuffer
   val state: PipelineState = new PipelineState
   val fetcher: Fetcher = new Fetcher(this.state, instructionMemory, instructionsPerCycle, branchPredictor)
