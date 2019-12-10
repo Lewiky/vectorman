@@ -13,6 +13,7 @@ class WriteBack(state: PipelineState, pipeline: Pipeline, reorderBuffer: Reorder
     if (result.getTarget == PC) {
       if (result.hasResult) {
         state.setPc(result.getResult)
+        branchPredictor.ingest(result.getText, state.getPc -1)
       }
     }
     else {

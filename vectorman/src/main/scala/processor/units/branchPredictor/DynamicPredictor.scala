@@ -32,7 +32,7 @@ class DynamicPredictor extends BranchPredictor {
   }
 
   override protected def predictTaken(string: String): Boolean = {
-    val unconditionalBranches = List("BRA", "JMP")
+    val unconditionalBranches = List("BRA", "JMP", "END")
     unconditionalBranches.foreach(branch => if (string.contains(branch)) return true)
     if(!this.states.contains(lastSeen._2)){
       this.states += (lastSeen._2 -> STRONG_TAKEN)

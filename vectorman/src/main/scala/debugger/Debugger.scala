@@ -66,6 +66,7 @@ class Debugger(instructionMemory: InstructionMemory,
           case 0 => alwaysNotTaken
           case 1 => static
           case 2 => dynamic
+          case 3 => neural
           case _ => alwaysNotTaken
         }
         println(s"Branch Predictor switched to: $branchPredictor")

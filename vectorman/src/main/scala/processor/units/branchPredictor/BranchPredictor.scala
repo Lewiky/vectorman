@@ -24,7 +24,6 @@ abstract class BranchPredictor {
   def predict(): ProgramCounter = {
     var prediction = lastSeen._2 + 1
 
-    //Do static analysis on previous instruction type
     val instruction = lastSeen._1
     if (isBranch(instruction)) {
       if (predictTaken(instruction)) {
@@ -44,11 +43,11 @@ abstract class BranchPredictor {
   }
 
   def wasCorrect(executionResult: ExecutionResult): Boolean = {
-    if(!this.predictions.contains(executionResult.getPC)) return false
+    if (!this.predictions.contains(executionResult.getPC)) return false
     val result = executionResult.getResult == this.predictions(executionResult.getPC)
-    if(result) correct += 1
+    if (result) correct += 1
     else incorrect += 1
-    if(executionResult.hasResult){
+    if (executionResult.hasResult) {
       branchTargets += (executionResult.getPC -> executionResult.getResult)
     } else {
       branchTargets += (executionResult.getPC -> (executionResult.getPC + 1))
@@ -65,7 +64,7 @@ abstract class BranchPredictor {
     println("-- Branch Predictor --")
     println(s"Correct Guesses: $correct")
     println(s"Incorrect Guesses: $incorrect")
-    val percentage: Double = (correct/(correct + incorrect+0.0001))*100 //Prevent division by zero
+    val percentage: Double = (correct / (correct + incorrect + 0.000001)) * 100 //Prevent division by zero
     println(f"Percentage Correct: $percentage%2.1f")
   }
 
