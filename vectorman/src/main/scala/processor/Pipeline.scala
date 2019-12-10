@@ -28,7 +28,7 @@ class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, 
   private def pipeMany[T](a: EUnit[_, List[T]], b: List[EUnit[T, _]]): Unit = {
     a.output match {
       case Some(output) => (output zip b).foreach {
-        case (out, unit) => if(unit.input.isEmpty) unit.input = Some(out)
+        case (out, unit) => if (unit.input.isEmpty) unit.input = Some(out)
       }
       case None => ()
     }
@@ -36,10 +36,10 @@ class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, 
   }
 
   def flush(): Unit = {
-    this.units.foreach( unit =>{
+    this.units.foreach(unit => {
       unit.input = None
       unit.output = None
-    } )
+    })
     this.executors.foreach(_.flush())
     this.decoder.reservationStation.flush()
     this.reorderBuffer.flush()
@@ -59,9 +59,10 @@ class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, 
 
   def printStatistics(): Unit = {
     val cycles = state.getTime
-    val instructions = state.getInstructionsCompleted
-    val rate = instructions.toFloat/cycles
-    println(f"Executed $instructions instructions in $cycles cycles (rate $rate%1.2f inst/cycle)")
+    val instructionsCompleted = state.getInstructionsCompleted
+    val instructions = reorderBuffer.instructionsSeen()
+    val rate = instructions.toFloat / cycles
+    println(f"Executed $instructions instructions ($instructionsCompleted completed) in $cycles cycles (rate $rate%1.2f inst/cycle)")
     branchPredictor.printStatistics()
   }
 
@@ -72,7 +73,7 @@ class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, 
     this.printStatistics()
   }
 
-  def setExecutors(n: Int) : Unit = {
+  def setExecutors(n: Int): Unit = {
     this.executors = List.fill(executeUnits)(new Executor(this.state))
     this.decoder = new Decoder(this.executors, this.reorderBuffer, this.state)
     this.units = List(fetcher, decoder, writeBack) ++ executors
@@ -80,10 +81,10 @@ class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, 
 
   def toggleVerbose(): Unit = {
     val root: Logger = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger]
-    if(this.verbose) {
+    if (this.verbose) {
       root.setLevel(Level.INFO)
       println("-- Verbose Off --")
-    } else{
+    } else {
       root.setLevel(Level.DEBUG)
       println("-- Verbose On  --")
     }

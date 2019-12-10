@@ -40,4 +40,6 @@ class ReorderBuffer {
     println("-- ReorderBuffer --")
     this.buffer.show()
   }
+
+  def instructionsSeen(): Int = this.counter
 }
