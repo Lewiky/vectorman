@@ -77,11 +77,11 @@ class NeuralPredictor extends BranchPredictor {
     if (hamming_t > hamming_nt) {
       winner = true
       update = vMul(a, vSub(x, v_t))
-      true
+      false
     } else {
       winner = false
       update = vMul(a ,(vSub(x, v_nt)))
-      false
+      true
     }
   }
 
