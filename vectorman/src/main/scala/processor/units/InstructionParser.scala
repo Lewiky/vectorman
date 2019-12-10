@@ -7,7 +7,7 @@ import scala.util.parsing.combinator.RegexParsers
 object InstructionParser extends RegexParsers {
 
   def number: Parser[Int] =
-    """[-]?[0-9]{1,2}""".r ^^ {
+    """[-]?[0-9]{1,3}""".r ^^ {
       _.toInt
     }
 
