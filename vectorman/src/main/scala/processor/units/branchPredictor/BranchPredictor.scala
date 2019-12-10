@@ -5,8 +5,10 @@ import processor.{ExecutionResult, ProgramCounter}
 abstract class BranchPredictor {
 
   protected var predictions: Map[ProgramCounter, ProgramCounter] = Map()
+  protected var branchTargets: Map[ProgramCounter, ProgramCounter] = Map()
   protected var correct: Int = 0
   protected var incorrect: Int = 0
+  protected val branches: List[String] = List("BRA", "JMP", "BLE", "BEQ")
 
   def predict(): ProgramCounter
 
@@ -17,11 +19,16 @@ abstract class BranchPredictor {
     val result = executionResult.getResult == this.predictions(executionResult.getPC)
     if(result) correct += 1
     else incorrect += 1
+    if(executionResult.hasResult){
+      branchTargets += (executionResult.getPC -> executionResult.getResult)
+    } else {
+      branchTargets += (executionResult.getPC -> (executionResult.getPC + 1))
+    }
     result
   }
 
   def print(): Unit = {
-    println("Predictions:")
+    println("-- Predictions --")
     println(predictions)
   }
 

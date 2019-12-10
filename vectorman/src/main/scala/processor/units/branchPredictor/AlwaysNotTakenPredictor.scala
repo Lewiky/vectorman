@@ -14,5 +14,6 @@ class AlwaysNotTakenPredictor extends BranchPredictor {
 
   override def ingest(instruction: String, programCounter: ProgramCounter): Unit = {
     lastSeenPC = programCounter
+    logger.debug(s"Ingested: PC:$instruction")
   }
 }

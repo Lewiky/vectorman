@@ -26,9 +26,6 @@ class Decoder(executors: List[Executor], reorderBuffer: ReorderBuffer, state: Pi
 
   private def buildReservationStationInput(lines: List[(String, ProgramCounter)]): List[ReorderBufferEntry] = {
     val xs = decodeMany(lines).map(x => reorderBuffer.addItem(x._1, x._2))
-    xs foreach {
-      entry => state.reserveScoreboard(entry)
-    }
     xs
   }
 

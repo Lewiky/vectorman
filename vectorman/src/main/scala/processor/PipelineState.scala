@@ -37,7 +37,7 @@ class PipelineState {
   }
 
   def printScoreboard(): Unit = {
-    println("Scoreboard:")
+    println("-- Scoreboard --")
 
     for (item <- this.scoreboard) {
       println(item)
@@ -49,10 +49,14 @@ class PipelineState {
       return
     }
     this.scoreboard += (entry.getInstruction.getDestination -> Some(entry))
+    logger.debug(s"Scoreboard Reserved: $entry")
   }
 
   def freeScoreboard(result: ExecutionResult): Unit = {
-    this.scoreboard += (result.getTarget -> None)
+    var target = result.getTarget
+    if(result.getIsMemory) target = 1000
+    logger.debug(s"Scoreboard freed: $result($target)")
+    this.scoreboard += (target -> None)
   }
 
   def scoreboardReserved(entry: ReorderBufferEntry): Boolean = {
@@ -60,18 +64,12 @@ class PipelineState {
       param =>
         if (this.scoreboard.contains(param)) {
           this.scoreboard(param) match {
-            case Some(value) => if(value.getPC < entry.getPC) return true
+            case Some(value) => if(value.uid < entry.uid) return true
             case None => ()
           }
         }
     }
-    if (this.scoreboard.contains(entry.getInstruction.getDestination)) {
-      this.scoreboard(entry.getInstruction.getDestination) match {
-        case Some(sb_entry) => return sb_entry != entry
-        case None => ()
-      }
-    }
-    false
+   this.scoreboardTargetReserved(entry)
   }
 
   def scoreboardTargetReserved(entry: ReorderBufferEntry): Boolean = {

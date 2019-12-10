@@ -9,6 +9,7 @@ class WriteBack(state: PipelineState, pipeline: Pipeline, reorderBuffer: Reorder
   var output: Option[Nothing] = _
 
   private def writeResult(result: ExecutionResult): Unit = {
+    logger.debug(s"Writing Back: ${result}")
     if (result.getTarget == PC) {
       if (result.hasResult) {
         state.setPc(result.getResult)
@@ -24,8 +25,13 @@ class WriteBack(state: PipelineState, pipeline: Pipeline, reorderBuffer: Reorder
       }
     }
     state.freeScoreboard(result)
-    if (result.getTarget == PC && !branchPredictor.wasCorrect(result)){
-      branchPredictor.ingest("", state.getPc - 1)
+    if (result.getTarget == PC && !branchPredictor.wasCorrect(result) && state.getPc > 0) {
+      if (!result.hasResult) {
+        branchPredictor.ingest(result.getText, result.getPC - 1)
+        state.setPc(result.getPC)
+      } else {
+        branchPredictor.ingest(result.getText, state.getPc - 1)
+      }
       this.pipeline.flush()
     }
     state.printRegisters()

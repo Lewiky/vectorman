@@ -1,6 +1,5 @@
 package debugger
 
-import processor.units.branchPredictor._
 import processor.units.branchPredictor.branchPredictorType._
 import processor.{InstructionMemory, Pipeline}
 
@@ -9,7 +8,7 @@ import scala.io.StdIn
 class Debugger(instructionMemory: InstructionMemory,
                var instructionsPerCycle: Int = 5,
                var executeUnits: Int = 2,
-               var branchPredictor: Value = alwaysNotTaken) {
+               var branchPredictor: Value = static) {
   var pipeline = new Pipeline(instructionMemory, instructionsPerCycle, executeUnits, branchPredictor)
 
   private def buildPipeline(executeUnits: Int = this.executeUnits ): Pipeline = {
@@ -46,6 +45,7 @@ class Debugger(instructionMemory: InstructionMemory,
         pipeline.decoder.reservationStation.print()
         pipeline.state.printScoreboard()
         pipeline.branchPredictor.print()
+        pipeline.reorderBuffer.show()
       }
       if (keypress == 'h') {
         print(Assets.help)
@@ -59,6 +59,16 @@ class Debugger(instructionMemory: InstructionMemory,
       if (keypress == 'u') {
         pipeline = buildPipeline(executeUnits=input(2).asDigit)
         println(s"Executing with $executeUnits units")
+      }
+      if (keypress == 'b'){
+        val number = input(2).asDigit
+        this.branchPredictor = number match {
+          case 0 => alwaysNotTaken
+          case 1 => static
+          case _ => alwaysNotTaken
+        }
+        println(s"Branch Predictor switched to: $branchPredictor")
+        pipeline = buildPipeline()
       }
       last = keypress
     }

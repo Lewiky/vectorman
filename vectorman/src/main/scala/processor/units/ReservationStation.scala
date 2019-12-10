@@ -3,6 +3,8 @@ package processor.units
 import processor._
 import processor.units.circularBuffer.ReorderBufferEntry
 
+import scala.collection.mutable
+import scala.collection.mutable.Set
 import scala.collection.mutable.ListBuffer
 
 class ReservationStation(executors: List[Executor], state: PipelineState) extends EUnit[List[ReorderBufferEntry], List[ReorderBufferEntry]] {
@@ -12,9 +14,21 @@ class ReservationStation(executors: List[Executor], state: PipelineState) extend
   private var buff: ListBuffer[ReorderBufferEntry] = new ListBuffer[ReorderBufferEntry]
 
   private def resolveDependencies(): Unit = {
+    val prevDestinations: mutable.Set[Register] = mutable.Set()
+    val prevParams: mutable.Set[Register] = mutable.Set()
+    var haveSeenStore: Boolean = false
     shelf = shelf map {
       case (entry: ReorderBufferEntry, _: Boolean) =>
-        (entry, !state.scoreboardReserved(entry))
+        val destinationSeen = prevParams.contains(entry.getInstruction.getDestination)
+        val paramsSeen = prevDestinations.intersect(entry.getInstruction.getParams.toSet).nonEmpty
+        prevDestinations.addOne(entry.getInstruction.getDestination)
+        prevParams.addAll(entry.getInstruction.getParams)
+        var tup = (entry, !state.scoreboardReserved(entry) && !destinationSeen && !paramsSeen)
+        if (entry.getInstruction.getDestination == 1000) {
+          if(haveSeenStore) tup = (entry, false)
+          haveSeenStore = true
+        }
+        tup
     }
   }
 
@@ -56,6 +70,7 @@ class ReservationStation(executors: List[Executor], state: PipelineState) extend
       if (item._2) {
         this.shelf -= item
         logger.debug(s"Dispatched $item")
+        state.reserveScoreboard(item._1)
         return Some(item._1)
       }
     }
@@ -67,23 +82,24 @@ class ReservationStation(executors: List[Executor], state: PipelineState) extend
   }
 
   override def tick(): Unit = {
-    this.shelf foreach(
-      x => {
-        if(!state.scoreboardTargetReserved(x._1)) state.reserveScoreboard(x._1)
-      }
-      )
+    //    this.shelf foreach {
+    //      x
+    //      => {
+    //        if (!state.scoreboardTargetReserved(x._1)) state.reserveScoreboard(x._1)
+    //      }
+    //    }
     if (output.isDefined) return
     input match {
-      case Some(xs) => xs.foreach(x => this.shelf.addOne((x, false)))
+      case Some(xs) => xs.foreach(x => this.shelf += ((x, false)))
       case None => ()
     }
     input = None
   }
 
   def print(): Unit = {
-    println("Reservation Station:")
+    println("-- Reservation Station --")
     shelf foreach {
-      case(item, state) => println(s"$item  | $state")
+      case (item, state) => println(s"$item  | $state")
     }
   }
 

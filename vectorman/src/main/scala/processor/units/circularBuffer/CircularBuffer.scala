@@ -31,7 +31,7 @@ class CircularBuffer[A: Manifest](size: Int) {
 
   def show(): Unit = {
     for(i <- 0.until(size)){
-      print(s"${buffer(i)} ")
+      print(s"${buffer(i)} |")
     }
     println()
     val lowest = math.min(headPointer, tailPointer)
