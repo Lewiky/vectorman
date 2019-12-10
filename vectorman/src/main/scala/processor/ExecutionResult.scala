@@ -7,7 +7,7 @@ class ExecutionResult(target: Option[Int], result: Option[Int], programCounter: 
 
   def getTarget: Register = {
     if (this.isMemory) {
-      return this.target.get + 1000
+      return this.target.get + MEM
     }
     this.target.someOr(-2)
   }

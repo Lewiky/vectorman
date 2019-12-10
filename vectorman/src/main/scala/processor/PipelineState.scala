@@ -11,6 +11,7 @@ class PipelineState {
   private var scoreboard: Map[Int, Option[ReorderBufferEntry]] = Map()
   private var timer: Int = 0
   private var instructions: Int = 0
+  private var executed: Int = 0
 
   def increment(amount: Int = 1): Unit = {
     this.programCounter += amount
@@ -54,7 +55,7 @@ class PipelineState {
 
   def freeScoreboard(result: ExecutionResult): Unit = {
     var target = result.getTarget
-    if(result.getIsMemory) target = 1000
+    if(result.getIsMemory) target = MEM
     logger.debug(s"Scoreboard freed: $result($target)")
     this.scoreboard += (target -> None)
   }
@@ -97,7 +98,7 @@ class PipelineState {
   }
 
   def getMem(address: Int): Int = {
-    val new_address = address + 1000
+    val new_address = address + MEM
     if (!this.memoryFile.contains(new_address)) return 0
     logger.debug(s"Returning $new_address: ${this.memoryFile(new_address)}")
     this.memoryFile(new_address)
@@ -118,5 +119,9 @@ class PipelineState {
   def instructionFinished(): Unit = this.instructions += 1
 
   def getInstructionsCompleted: Int = this.instructions
+
+  def instructionExecuted(): Unit = this.executed += 1
+
+  def getInstructionsExecuted: Int = this.executed
 
 }

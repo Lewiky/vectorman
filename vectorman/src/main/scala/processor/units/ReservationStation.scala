@@ -4,7 +4,6 @@ import processor._
 import processor.units.circularBuffer.ReorderBufferEntry
 
 import scala.collection.mutable
-import scala.collection.mutable.Set
 import scala.collection.mutable.ListBuffer
 
 class ReservationStation(executors: List[Executor], state: PipelineState) extends EUnit[List[ReorderBufferEntry], List[ReorderBufferEntry]] {
@@ -24,7 +23,7 @@ class ReservationStation(executors: List[Executor], state: PipelineState) extend
         prevDestinations.addOne(entry.getInstruction.getDestination)
         prevParams.addAll(entry.getInstruction.getParams)
         var tup = (entry, !state.scoreboardReserved(entry) && !destinationSeen && !paramsSeen)
-        if (entry.getInstruction.getDestination == 1000) {
+        if (entry.getInstruction.getDestination == MEM) {
           if(haveSeenStore) tup = (entry, false)
           haveSeenStore = true
         }

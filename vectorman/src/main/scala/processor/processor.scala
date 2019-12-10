@@ -7,6 +7,7 @@ package object processor {
   type ProgramCounter = Register
   val logger = Logger("root")
   val PC: Register = -1
+  val MEM: Register = 1000
 
   implicit class ListImprovements[A](l: List[A]) {
     def generatePairs: IndexedSeq[(A, A)] = {

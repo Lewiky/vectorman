@@ -18,7 +18,7 @@ case class Div(params: List[Register], text: String) extends Instruction
 case class Lod(params: List[Register], text: String) extends Instruction
 
 case class Str(params: List[Register], text: String) extends Instruction {
-  override def getDestination: Register = 1000 //Big old offset for memory addresses
+  override def getDestination: Register = MEM
   override def getParams: List[Register] = params
 }
 

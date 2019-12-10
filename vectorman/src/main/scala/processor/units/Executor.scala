@@ -57,9 +57,6 @@ class Executor(state: PipelineState) extends EUnit[ReorderBufferEntry, Execution
         if (g(params(1)) <= g(params(2))) {
           result = Some(g(params(0)) + programCounter)
         }
-//        } else {
-//          result = Some(programCounter + 1)
-//        }
       case Cmp(params, _) =>
         var comp = 0
         if (g(params(1)) < g(params(2))) comp = -1
