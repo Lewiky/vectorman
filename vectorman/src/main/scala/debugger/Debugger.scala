@@ -8,7 +8,7 @@ import scala.io.StdIn
 class Debugger(instructionMemory: InstructionMemory,
                var instructionsPerCycle: Int = 5,
                var executeUnits: Int = 2,
-               var branchPredictor: Value = static) {
+               var branchPredictor: Value = dynamic) {
   var pipeline = new Pipeline(instructionMemory, instructionsPerCycle, executeUnits, branchPredictor)
 
   private def buildPipeline(executeUnits: Int = this.executeUnits ): Pipeline = {
@@ -65,6 +65,7 @@ class Debugger(instructionMemory: InstructionMemory,
         this.branchPredictor = number match {
           case 0 => alwaysNotTaken
           case 1 => static
+          case 2 => dynamic
           case _ => alwaysNotTaken
         }
         println(s"Branch Predictor switched to: $branchPredictor")
