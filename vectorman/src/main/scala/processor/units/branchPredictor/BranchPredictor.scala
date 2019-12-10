@@ -1,18 +1,47 @@
 package processor.units.branchPredictor
 
-import processor.{ExecutionResult, ProgramCounter}
+import processor.{ExecutionResult, ProgramCounter, logger}
 
 abstract class BranchPredictor {
 
   protected var predictions: Map[ProgramCounter, ProgramCounter] = Map()
   protected var branchTargets: Map[ProgramCounter, ProgramCounter] = Map()
+  protected var lastSeen: (String, ProgramCounter) = ("", -1)
   protected var correct: Int = 0
   protected var incorrect: Int = 0
   protected val branches: List[String] = List("BRA", "JMP", "BLE", "BEQ")
 
-  def predict(): ProgramCounter
 
-  def ingest(instruction: String, programCounter: ProgramCounter): Unit
+  protected def isBranch(string: String): Boolean = {
+    this.branches foreach {
+      branch => if (string.contains(branch)) return true
+    }
+    false
+  }
+
+  protected def predictTaken(string: String): Boolean
+
+  def predict(): ProgramCounter = {
+    var prediction = lastSeen._2 + 1
+
+    //Do static analysis on previous instruction type
+    val instruction = lastSeen._1
+    if (isBranch(instruction)) {
+      if (predictTaken(instruction)) {
+        if (branchTargets.contains(lastSeen._2)) {
+          prediction = branchTargets(lastSeen._2)
+        }
+      }
+    }
+    this.predictions += (this.lastSeen._2 -> prediction)
+    logger.debug(s"Predicting: $prediction")
+    prediction
+  }
+
+  def ingest(instruction: String, programCounter: ProgramCounter): Unit = {
+    lastSeen = (instruction, programCounter)
+    logger.debug(s"Ingested $lastSeen")
+  }
 
   def wasCorrect(executionResult: ExecutionResult): Boolean = {
     if(!this.predictions.contains(executionResult.getPC)) return false

@@ -2,7 +2,7 @@ package processor.units.branchPredictor
 
 
 object branchPredictorType extends Enumeration {
-  val alwaysNotTaken, static = Value
+  val alwaysNotTaken, static, dynamic = Value
 }
 
 object BranchPredictorFactory {
@@ -10,6 +10,7 @@ object BranchPredictorFactory {
     bp_type match {
       case branchPredictorType.static => new StaticPredictor()
       case branchPredictorType.alwaysNotTaken => new AlwaysNotTakenPredictor()
+      case branchPredictorType.dynamic => new DynamicPredictor()
     }
   }
 

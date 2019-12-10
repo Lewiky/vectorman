@@ -4,8 +4,8 @@ import debugger.Debugger
 /*
 TODO: Write more ASM programs
 TODO: Branch Prediction
-  SUBTODO: Static Branch
   SUBTODO: Dynamic Branch
+TODO: Register Renaming/Tomosulo Algorithm
 */
 object Main {
   def main(args: Array[String]): Unit = {
