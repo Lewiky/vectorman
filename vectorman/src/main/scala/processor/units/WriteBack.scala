@@ -7,13 +7,13 @@ class WriteBack(state: PipelineState, pipeline: Pipeline, reorderBuffer: Reorder
 
   var input: Option[List[ExecutionResult]] = None
   var output: Option[Nothing] = _
+  private var flushed = false
 
   private def writeResult(result: ExecutionResult): Unit = {
     logger.debug(s"Writing Back: ${result}")
     if (result.getTarget == PC) {
       if (result.hasResult) {
         state.setPc(result.getResult)
-        branchPredictor.ingest(result.getText, state.getPc -1)
       }
     }
     else {
@@ -34,18 +34,19 @@ class WriteBack(state: PipelineState, pipeline: Pipeline, reorderBuffer: Reorder
         branchPredictor.ingest(result.getText, state.getPc - 1)
       }
       this.pipeline.flush()
+      flushed = true
     }
-    state.printRegisters()
-    state.printMemory()
     state.instructionFinished()
   }
 
   def tick(): Unit = {
     if (this.reorderBuffer.nonEmpty) {
-      this.reorderBuffer.getNextResult match {
-        case Some(result) => this.writeResult(result)
-        case None => ()
+      this.reorderBuffer.getNextResults foreach  {
+        result => if(!flushed) this.writeResult(result)
       }
+      flushed = false
+      state.printRegisters()
+      state.printMemory()
     }
   }
 }

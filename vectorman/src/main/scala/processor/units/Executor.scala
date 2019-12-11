@@ -90,6 +90,7 @@ class Executor(state: PipelineState) extends EUnit[ReorderBufferEntry, Execution
         }
         else {
           this.execute(entry)
+          state.instructionExecuted()
           executing = (None, 1)
           input = None
         }

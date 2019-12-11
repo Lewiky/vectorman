@@ -60,7 +60,7 @@ class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, 
   def printStatistics(): Unit = {
     val cycles = state.getTime
     val instructionsCompleted = state.getInstructionsCompleted
-    val instructions = reorderBuffer.instructionsSeen()
+    val instructions = state.getInstructionsExecuted
     val rate = instructions.toFloat / cycles
     println(f"Executed $instructions instructions ($instructionsCompleted completed) in $cycles cycles (rate $rate%1.2f inst/cycle)")
     branchPredictor.printStatistics()

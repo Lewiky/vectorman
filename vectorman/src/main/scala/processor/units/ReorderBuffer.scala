@@ -3,22 +3,28 @@ package processor.units
 import processor._
 import processor.units.circularBuffer.{CircularBuffer, ReorderBufferEntry}
 
+import scala.collection.mutable.ListBuffer
+
 
 class ReorderBuffer {
 
   private var buffer: CircularBuffer[ReorderBufferEntry] = new CircularBuffer[ReorderBufferEntry](100)
   private var counter = 0
 
-  def getNextResult: Option[ExecutionResult] = {
-    if (buffer.peek().isFinished) {
+  def getNextResults: List[ExecutionResult] = {
+    var buff: ListBuffer[ExecutionResult] = new ListBuffer()
+    while (buffer.peek() != null && buffer.peek().isFinished && !buffer.empty) {
       this.buffer.read() match {
         case Some(entry) =>
           logger.debug(s"Released from buffer: ${entry.uid}: ${entry.getInstruction}")
-          return entry.getResult
+          entry.getResult match {
+            case Some(result) => buff += result
+            case None => ()
+          }
         case None => ()
       }
     }
-    None
+    buff.toList
   }
 
   def addItem(instruction: Instruction, programCounter: ProgramCounter): ReorderBufferEntry = {
