@@ -10,6 +10,8 @@ class Decoder(executors: List[Executor], reorderBuffer: ReorderBuffer, state: Pi
   var input: Option[List[(String, ProgramCounter)]] = None
   var output: Option[List[ReorderBufferEntry]] = None
   val reservationStation: ReservationStation = new ReservationStation(executors, state)
+  val registerRenameUnit: RegisterRenameUnit = new RegisterRenameUnit
+  var renamingEnabled: Boolean = false
 
   private def decodeNext(line: String): Instruction = {
     Parser.parseAll(Parser.instruction, line) match {
@@ -21,7 +23,11 @@ class Decoder(executors: List[Executor], reorderBuffer: ReorderBuffer, state: Pi
   }
 
   private def decodeMany(lines: List[(String, ProgramCounter)]): List[(Instruction, ProgramCounter)] = {
-    lines.map(x => (this.decodeNext(x._1), x._2))
+    lines.map(x => if(!renamingEnabled){
+      (this.decodeNext(x._1), x._2)
+    } else {
+      (registerRenameUnit.rename(this.decodeNext(x._1)), x._2)
+    })
   }
 
   private def buildReservationStationInput(lines: List[(String, ProgramCounter)]): List[ReorderBufferEntry] = {

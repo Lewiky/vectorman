@@ -1,5 +1,5 @@
 # Load immediates
-LOI r0 3
+LOI r0 16
 LOI r1 0
 LOI r2 1
 LOI r3 2
@@ -13,7 +13,7 @@ SUB r4 r4 r2
 BLE r5 r6 r4
 # Setup for dot product
 LOI r1 0
-LOI r2 3
+CPY r2 r0
 LOI r10 0
 LOI r7 1
 LOI r8 -7

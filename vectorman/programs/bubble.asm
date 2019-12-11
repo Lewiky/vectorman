@@ -13,7 +13,7 @@ LOI r12 4
 LOI r13 -8
 LOI r14 -12
 # length = 10
-LOI r2 30
+LOI r2 50
 	# changed = False
 	LOI r3 0
 	# length --
@@ -39,7 +39,7 @@ LOI r2 30
 	#increment index 
 	ADD r1 r1 r10
 	#for i in 0 until length (#2)
-	BLE r13 r1 r2
+BLE r13 r1 r2
 # Until has changed is false
 BEQ r14 r3 r10
 END

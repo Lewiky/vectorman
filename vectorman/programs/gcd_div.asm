@@ -3,8 +3,8 @@ LOI r11 0
 LOI r12 7
 LOI r13 -6
 #a and b
-LOI r0 233392039
-LOI r1 393042919
+LOI r0 2333333434
+LOI r1 3342494242
 #loop
 BEQ r12 r11 r1
 #calculate a mod b

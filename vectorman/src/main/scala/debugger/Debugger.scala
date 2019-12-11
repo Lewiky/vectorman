@@ -6,11 +6,11 @@ import processor.{InstructionMemory, Pipeline}
 
 import scala.io.StdIn
 
-class Debugger(instructionMemory: InstructionMemory,
-               userMemory: Option[InstructionMemory] = None,
+class Debugger(var instructionMemory: InstructionMemory,
+               var userMemory: Option[InstructionMemory] = None,
                var instructionsPerCycle: Int = 5,
                var executeUnits: Int = 2,
-               var branchPredictor: branchPredictorType.Value = dynamic) {
+               var branchPredictor: branchPredictorType.Value = neural) {
   var pipeline = new Pipeline(instructionMemory, userMemory, instructionsPerCycle, executeUnits, branchPredictor)
   private var renamingEnabled: Boolean = false
 
@@ -18,7 +18,7 @@ class Debugger(instructionMemory: InstructionMemory,
     this.executeUnits = executeUnits
     this.instructionsPerCycle = Math.max(5, executeUnits)
     val x = new Pipeline(instructionMemory, userMemory, instructionsPerCycle, executeUnits, branchPredictor)
-    //x.decoder.enableRenaming = renamingEnabled
+    x.decoder.renamingEnabled = renamingEnabled
     x
   }
 
@@ -52,7 +52,7 @@ class Debugger(instructionMemory: InstructionMemory,
         pipeline.state.printScoreboard()
         pipeline.branchPredictor.print()
         pipeline.reorderBuffer.show()
-        //pipeline.decoder.registerRenameUnit.print()
+        pipeline.decoder.registerRenameUnit.print()
       }
       if (keypress == 'h') {
         print(Assets.help)
@@ -83,6 +83,15 @@ class Debugger(instructionMemory: InstructionMemory,
         renamingEnabled = !renamingEnabled
         println(s"Renaming: $renamingEnabled")
         pipeline = buildPipeline()
+      }
+      if(keypress == 'l'){
+        instructionMemory = new InstructionMemory(instructionMemory.filename)
+        userMemory match {
+          case Some(memory) => userMemory = Some(new InstructionMemory(memory.filename))
+          case None => ()
+        }
+        pipeline = buildPipeline()
+        println("Reloaded file(s)")
       }
       last = keypress
     }
