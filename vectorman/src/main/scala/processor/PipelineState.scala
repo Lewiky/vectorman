@@ -14,6 +14,7 @@ class PipelineState(userMemory: Option[InstructionMemory]) {
   private var timer: Int = 0
   private var instructions: Int = 0
   private var executed: Int = 0
+  var verbose: Boolean = false
 
   private def buildMemory(memory: InstructionMemory): Map[Int, Int] ={
     var map: Map[Int, Int] = Map()

@@ -61,6 +61,8 @@ class Pipeline(instructionMemory: InstructionMemory,userMemory: Option[Instructi
   }
 
   def printStatistics(): Unit = {
+    state.printRegisters()
+    state.printMemory()
     val cycles = state.getTime
     val instructionsCompleted = state.getInstructionsCompleted
     val instructions = state.getInstructionsExecuted
@@ -92,5 +94,6 @@ class Pipeline(instructionMemory: InstructionMemory,userMemory: Option[Instructi
       println("-- Verbose On  --")
     }
     this.verbose = !this.verbose
+    state.verbose = this.verbose
   }
 }

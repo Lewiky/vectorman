@@ -8,7 +8,7 @@ import scala.collection.mutable.ListBuffer
 
 class ReorderBuffer {
 
-  private var buffer: CircularBuffer[ReorderBufferEntry] = new CircularBuffer[ReorderBufferEntry](100)
+  private var buffer: CircularBuffer[ReorderBufferEntry] = new CircularBuffer[ReorderBufferEntry](1000)
   private var counter = 0
 
   def getNextResults: List[ExecutionResult] = {

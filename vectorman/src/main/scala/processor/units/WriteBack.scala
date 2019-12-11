@@ -41,12 +41,14 @@ class WriteBack(state: PipelineState, pipeline: Pipeline, reorderBuffer: Reorder
 
   def tick(): Unit = {
     if (this.reorderBuffer.nonEmpty) {
-      this.reorderBuffer.getNextResults foreach  {
-        result => if(!flushed) this.writeResult(result)
+      this.reorderBuffer.getNextResults foreach {
+        result => if (!flushed) this.writeResult(result)
       }
       flushed = false
-      state.printRegisters()
-      state.printMemory()
+      if (state.verbose) {
+        state.printRegisters()
+        state.printMemory()
+      }
     }
   }
 }

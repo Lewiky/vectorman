@@ -13,7 +13,7 @@ LOI r12 4
 LOI r13 -8
 LOI r14 -12
 # length = 10
-LOI r2 10
+LOI r2 30
 	# changed = False
 	LOI r3 0
 	# length --
