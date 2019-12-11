@@ -23,7 +23,7 @@ abstract class BranchPredictor {
 
   def predict(): ProgramCounter = {
     var prediction = lastSeen._2 + 1
-
+    if(lastSeen._1.contains("END")) return lastSeen._2
     val instruction = lastSeen._1
     if (isBranch(instruction)) {
       if (predictTaken(instruction)) {
