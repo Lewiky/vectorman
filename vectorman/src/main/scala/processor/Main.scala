@@ -10,7 +10,11 @@ TODO: Register Renaming/Tomosulo Algorithm
 object Main {
   def main(args: Array[String]): Unit = {
     val instructionMemory = new InstructionMemory(args(0))
-    val debugger = new Debugger(instructionMemory)
+    var userMemory: Option[InstructionMemory] = None
+    if(args.length == 2){
+      userMemory = Some(new InstructionMemory(args(1)))
+    }
+    val debugger = new Debugger(instructionMemory, userMemory = userMemory)
     debugger.debug()
   }
 }

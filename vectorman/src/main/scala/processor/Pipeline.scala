@@ -6,11 +6,11 @@ import processor.units.branchPredictor.{BranchPredictor, BranchPredictorFactory}
 import processor.units.branchPredictor.branchPredictorType._
 import processor.units.{Decoder, EUnit, Executor, Fetcher, ReorderBuffer, WriteBack}
 
-class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, executeUnits: Int, branchPredictorType: Value) {
+class Pipeline(instructionMemory: InstructionMemory,userMemory: Option[InstructionMemory],instructionsPerCycle: Int, executeUnits: Int, branchPredictorType: Value) {
 
   val branchPredictor: BranchPredictor = BranchPredictorFactory.create(branchPredictorType)
   val reorderBuffer = new ReorderBuffer
-  val state: PipelineState = new PipelineState
+  val state: PipelineState = new PipelineState(userMemory)
   val fetcher: Fetcher = new Fetcher(this.state, instructionMemory, instructionsPerCycle, branchPredictor)
   var executors: List[Executor] = List.fill(executeUnits)(new Executor(this.state))
   var decoder: Decoder = new Decoder(this.executors, this.reorderBuffer, this.state)

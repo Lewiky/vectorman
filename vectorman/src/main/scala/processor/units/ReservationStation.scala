@@ -16,6 +16,7 @@ class ReservationStation(executors: List[Executor], state: PipelineState) extend
     val prevDestinations: mutable.Set[Register] = mutable.Set()
     val prevParams: mutable.Set[Register] = mutable.Set()
     var haveSeenStore: Boolean = false
+    var haveSeenBranch: Boolean = false
     shelf = shelf map {
       case (entry: ReorderBufferEntry, _: Boolean) =>
         val destinationSeen = prevParams.contains(entry.getInstruction.getDestination)
@@ -26,6 +27,10 @@ class ReservationStation(executors: List[Executor], state: PipelineState) extend
         if (entry.getInstruction.getDestination == MEM) {
           if(haveSeenStore) tup = (entry, false)
           haveSeenStore = true
+        }
+        if(entry.getInstruction.getDestination == PC){
+          if(haveSeenBranch) tup = (entry, false)
+          haveSeenBranch = true
         }
         tup
     }

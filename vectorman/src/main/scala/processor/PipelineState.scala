@@ -1,17 +1,27 @@
 package processor
 
-import javax.print.attribute.standard.Destination
 import processor.units.circularBuffer.ReorderBufferEntry
 
 
-class PipelineState {
+class PipelineState(userMemory: Option[InstructionMemory]) {
   private var programCounter: ProgramCounter = 0
   private var registerFile: Map[Int, Int] = (for (_ <- 0 to 15) yield (0, 0)).toMap
-  private var memoryFile: Map[Int, Int] = Map()
+  private var memoryFile: Map[Int, Int] = userMemory match {
+    case Some(memory) => buildMemory(memory)
+    case None => Map()
+  }
   private var scoreboard: Map[Int, Option[ReorderBufferEntry]] = Map()
   private var timer: Int = 0
   private var instructions: Int = 0
   private var executed: Int = 0
+
+  private def buildMemory(memory: InstructionMemory): Map[Int, Int] ={
+    var map: Map[Int, Int] = Map()
+    for(i <- 0.until(memory.memory.length)){
+      map += (i + MEM -> memory.memory(i).toInt)
+    }
+    map
+  }
 
   def increment(amount: Int = 1): Unit = {
     this.programCounter += amount

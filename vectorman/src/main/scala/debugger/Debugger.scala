@@ -1,21 +1,23 @@
 package debugger
 
+import processor.units.branchPredictor.branchPredictorType
 import processor.units.branchPredictor.branchPredictorType._
 import processor.{InstructionMemory, Pipeline}
 
 import scala.io.StdIn
 
 class Debugger(instructionMemory: InstructionMemory,
+               userMemory: Option[InstructionMemory] = None,
                var instructionsPerCycle: Int = 5,
                var executeUnits: Int = 2,
-               var branchPredictor: Value = dynamic) {
-  var pipeline = new Pipeline(instructionMemory, instructionsPerCycle, executeUnits, branchPredictor)
+               var branchPredictor: branchPredictorType.Value = dynamic) {
+  var pipeline = new Pipeline(instructionMemory, userMemory, instructionsPerCycle, executeUnits, branchPredictor)
   private var renamingEnabled: Boolean = false
 
-  private def buildPipeline(executeUnits: Int = this.executeUnits ): Pipeline = {
+  private def buildPipeline(executeUnits: Int = this.executeUnits): Pipeline = {
     this.executeUnits = executeUnits
     this.instructionsPerCycle = Math.max(5, executeUnits)
-    val x = new Pipeline(instructionMemory, instructionsPerCycle, executeUnits, branchPredictor)
+    val x = new Pipeline(instructionMemory, userMemory, instructionsPerCycle, executeUnits, branchPredictor)
     //x.decoder.enableRenaming = renamingEnabled
     x
   }
@@ -62,10 +64,10 @@ class Debugger(instructionMemory: InstructionMemory,
         pipeline.printStatistics()
       }
       if (keypress == 'u') {
-        pipeline = buildPipeline(executeUnits=input(2).asDigit)
+        pipeline = buildPipeline(executeUnits = input(2).asDigit)
         println(s"Executing with $executeUnits units")
       }
-      if (keypress == 'b'){
+      if (keypress == 'b') {
         val number = input(2).asDigit
         this.branchPredictor = number match {
           case 0 => alwaysNotTaken
@@ -77,7 +79,7 @@ class Debugger(instructionMemory: InstructionMemory,
         println(s"Branch Predictor switched to: $branchPredictor")
         pipeline = buildPipeline()
       }
-      if (keypress == 'z'){
+      if (keypress == 'z') {
         renamingEnabled = !renamingEnabled
         println(s"Renaming: $renamingEnabled")
         pipeline = buildPipeline()

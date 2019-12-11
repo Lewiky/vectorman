@@ -47,7 +47,7 @@ case class Rsh(params: List[Register], text: String) extends Instruction
 
 case class Beq(params: List[Register], text: String) extends Instruction {
   override def getDestination: Register = PC
-  override def getParams: List[Register] = List(params(0))
+  override def getParams: List[Register] = params
 }
 
 case class Cpy(params: List[Register], text: String) extends Instruction
