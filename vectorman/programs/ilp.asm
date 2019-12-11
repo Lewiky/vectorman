@@ -5,7 +5,7 @@ LOI r3 1
 LOI r4 1
 LOI r5 1
 LOI r6 1
-LOI r7 10
+LOI r7 100
 LOI r8 1
 LOI r9 0
 LOI r10 -8

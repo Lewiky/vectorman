@@ -49,11 +49,14 @@ class Pipeline(instructionMemory: InstructionMemory, instructionsPerCycle: Int, 
 
   def tick(): Unit = {
     //I tried to map pipe over the units list but scala doesn't support dependant typing so it doesn't compile :(
+    this.fetcher.tick()
     this.pipe(this.fetcher, this.decoder)
+    this.decoder.tick()
     this.pipeMany(this.decoder, this.executors.filter(unit => unit.isReady))
-    this.units.foreach {
+    this.executors.foreach {
       _.tick()
     }
+    this.writeBack.tick()
     state.tickTime(1)
   }
 

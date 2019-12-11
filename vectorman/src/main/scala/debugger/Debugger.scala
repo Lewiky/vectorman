@@ -10,10 +10,14 @@ class Debugger(instructionMemory: InstructionMemory,
                var executeUnits: Int = 2,
                var branchPredictor: Value = dynamic) {
   var pipeline = new Pipeline(instructionMemory, instructionsPerCycle, executeUnits, branchPredictor)
+  private var renamingEnabled: Boolean = false
 
   private def buildPipeline(executeUnits: Int = this.executeUnits ): Pipeline = {
     this.executeUnits = executeUnits
-    new Pipeline(instructionMemory, instructionsPerCycle, executeUnits, branchPredictor)
+    this.instructionsPerCycle = Math.max(5, executeUnits)
+    val x = new Pipeline(instructionMemory, instructionsPerCycle, executeUnits, branchPredictor)
+    //x.decoder.enableRenaming = renamingEnabled
+    x
   }
 
   def debug(): Unit = {
@@ -46,6 +50,7 @@ class Debugger(instructionMemory: InstructionMemory,
         pipeline.state.printScoreboard()
         pipeline.branchPredictor.print()
         pipeline.reorderBuffer.show()
+        //pipeline.decoder.registerRenameUnit.print()
       }
       if (keypress == 'h') {
         print(Assets.help)
@@ -70,6 +75,11 @@ class Debugger(instructionMemory: InstructionMemory,
           case _ => alwaysNotTaken
         }
         println(s"Branch Predictor switched to: $branchPredictor")
+        pipeline = buildPipeline()
+      }
+      if (keypress == 'z'){
+        renamingEnabled = !renamingEnabled
+        println(s"Renaming: $renamingEnabled")
         pipeline = buildPipeline()
       }
       last = keypress

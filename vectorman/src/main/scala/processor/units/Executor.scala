@@ -79,7 +79,7 @@ class Executor(state: PipelineState) extends EUnit[ReorderBufferEntry, Execution
   }
 
   def tick(): Unit = {
-    if (input.isEmpty || output.isDefined) return
+    if (output.isDefined) return
     this.executing._1 match {
       case Some(entry) =>
         if (this.instructionLength(entry.getInstruction) > this.executing._2) {
@@ -92,9 +92,10 @@ class Executor(state: PipelineState) extends EUnit[ReorderBufferEntry, Execution
           this.execute(entry)
           state.instructionExecuted()
           executing = (None, 1)
-          input = None
         }
-      case None => this.executing = (input, 1)
+      case None =>
+        this.executing = (input, 1)
+        input = None
     }
   }
 
